@@ -1,8 +1,7 @@
 /**
  * @param {string} code
  */
-function compileToModule(code){
-
-    //return new Emitter().convert(code);
-  return new Emitter().convert();
+async function compileToModule(code){
+    const wasm = new Emitter().convert({});
+    return await WebAssembly.instantiate(wasm);
 }
