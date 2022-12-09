@@ -1,36 +1,97 @@
 class ParseRule{
-    /** @param {TokenType} lhs @param {SymbolString} rhs */
+    /**
+     * @param {TokenType} lhs
+     * @param {SymbolString} rhs
+     */
     constructor(lhs, rhs){
         this.lhs = lhs;
         this.rhs = rhs;
     }
 
-    get size(){ return this.size }
-    get empty(){ return this.size == 0 }
+    get length(){ return this.rhs.length }
+    get empty(){ return this.length === 0 }
 
-    toString(){ return `${lhs} := ${rhs}` }
+    toString(){ return `${this.lhs} := ${this.rhs}` }
 }
 
+/** @template T */
 class SSet{
     constructor(){
-        this.set = Object.create(null);
+      /** @type {SMap<T, T>} */
+      this.map = new SMap();
     }
 
+    /** @param {T} value */
     add(value){
-        this.set[value] = value;
+        this.map.add(value, value)
     }
 
+    /**
+     * @param {T} value
+     * @return {boolean}
+     */
     has(value){
-        return value.toString() in this.set;
+        return this.map.has(value);
     }
 }
 
-class Grammer{
-    /** @param {ParseRule[]} rules @param {TokenType} startSymbol */
-    constructor(...rules, startSymbol){
+/** @template T, U */
+class SMap{
+  constructor(){
+    this.set = Object.create(null);
+  }
+
+  /**
+   * @param {T} key
+   * @param {U} value
+   */
+  add(key, value){
+    this.set["_" + value] = value;
+  }
+
+  /**
+   * @param {T} key
+   * @return {boolean}
+   */
+  has(key){
+    return ("_" + key) in this.set;
+  }
+
+  /**
+   * @param {T} key
+   * @return {U}
+   */
+  get(key){
+    return this.set["_" + key];
+  }
+}
+
+class Grammar{
+    /**
+     * @param {TokenType} startSymbol
+     * @param {ParseRule} rules
+     */
+    constructor(startSymbol, ...rules){
         this.rules = rules;
 
-        /** @type {Set<SymbolString>} */
-        this.allSymbols = new Set();
+        /** @type {SSet<TokenType>} */
+        this.allSymbols = new SSet();
+        /** @type {SSet<TokenType>} */
+        this.nonTerminals = new SSet();
+        /** @type {SSet<TokenType>} */
+        this.terminals = new SSet();
+        /** @type {SSet<TokenType>} */
+        this.nullable = new SSet();
+        /** @type {SMap<TokenType, SSet<String>>} */
+        this.firstSets = new SMap();
+        /** @type {SMap<TokenType, SSet<String>>} */
+        this.followSets = new SMap();
+
+        this.allSymbols.add(TokenType.END);
+        this.nonTerminals.add(TokenType.END);
+
+        for(const rule of rules){
+          
+        }
     }
 }

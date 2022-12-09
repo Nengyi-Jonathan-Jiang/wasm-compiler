@@ -8,6 +8,8 @@ class TokenType{
     toString(){
         return this.name;
     }
+
+    static END = new TokenType("__END__", /^(?!x)x$/)
 }
 
 class Token{

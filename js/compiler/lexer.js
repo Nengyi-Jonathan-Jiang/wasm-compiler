@@ -1,5 +1,8 @@
 class Lexer {
-    /** @param {string} str @returns {Lexer} */
+    /**
+     * @param {string} str
+     * @returns {Lexer}
+     */
     static new([str]){
         const symbols = [], ignoredSymbols = [];
 
@@ -7,7 +10,7 @@ class Lexer {
             return s.replace(/[\\.,?{}[\]()^$\+*|\/]/g, "\\$&");
         }
 
-        str.split("\n").filter(i => i != "" && !i.startsWith("//")).map(i => i.trim()).map(i => {    
+        str.split("\n").filter(i => i != "" && !i.startsWith("//")).map(i => i.trim()).map(i => {
             const regex1 = /^([0-9A-Za-z\-]+) := \/(([^\\\/]|\\.)*)\/$/;
             const regex2 = /^ignore (([^:].|:[^=]).+|.{1,2})$/;
             const regex3 = /^basic (([^:].|:[^=]).+|.{1,2})$/;
@@ -30,16 +33,19 @@ class Lexer {
     }
 
     /**
-     * 
-     * @param {TokenType[]} symbols 
-     * @param {String[]} ignoredSymbols 
+     *
+     * @param {TokenType[]} symbols
+     * @param {String[]} ignoredSymbols
      */
     constructor(symbols, ignoredSymbols=[]){
 		this.symbols = symbols;
 		this.ignoredSymbols = new Set(ignoredSymbols);
 	}
 
-    /** @param {string} input @returns {Token[]} */
+    /**
+     * @param {string} input
+     * @returns {Token[]}
+     */
     tokenize(input) {
         /** @type {Token[]} */
         const tokens = [];
