@@ -1,8 +1,5 @@
-console.log("bruh");
-
-
 const lexer = Lexer.new`
-#declaration keywords
+//declaration keywords
 basic var
 basic param
 basic func
@@ -12,7 +9,7 @@ basic const
 basic module
 basic import
 
-#control keywords
+//control keywords
 basic while
 basic for
 basic if
@@ -21,37 +18,38 @@ basic test
 basic break
 basic continue
 
-#access modifiers
+//access modifiers
 basic public
 basic private
 basic protected
 basic static
 
-#memory keywords
+//memory keywords
 basic ptr
 basic ref
 basic deref
+basic alloc
 
-#misc keywords
+//misc keywords
 basic print
 basic setpixel
 basic new
 basic this
 
-#arithmetic operators
+//arithmetic operators
 basic +
 basic -
 basic *
 basic /
 basic %
 
-#comparison operators
+//comparison operators
 basic ==
 basic >=
 basic <=
 basic !=
 
-#assignment operators
+//assignment operators
 basic =
 basic +=
 basic -=
@@ -62,7 +60,7 @@ basic &=
 basic |=
 basic ^=
 
-#boolean operators: all seven basic logic gates are represented
+//boolean operators: all seven basic logic gates are represented
 basic !&
 basic !|
 basic !^
@@ -71,7 +69,11 @@ basic &
 basic |
 basic ^
 
-#grouping symbols
+//memory operators
+basic @
+basic #
+
+//grouping symbols
 basic (
 basic )
 basic [
@@ -80,17 +82,19 @@ basic {
 basic }
 
 
-#punctuation
+//punctuation
 basic .
 basic ,
+basic ;
 basic ->
 basic ::
 basic :
 
 symbol := /[$A-Za-z_][$0-9A-Za-z_]*/
 
-#literals
+//literals
+char-literal := /'[^\\\\]|\\\\.'/
 string-literal := /"([^\\\\]|\\\\.)*"/
-integer-literal := /[1-9]\\d*/
 number-literal := /[1-9]\\d*\\.\\d*|0?\\.\\d*/
+integer-literal := /[1-9]\\d*|0/
 `
