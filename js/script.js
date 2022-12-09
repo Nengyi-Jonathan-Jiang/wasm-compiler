@@ -90,5 +90,7 @@ basic :
 symbol := /[$A-Za-z_][$0-9A-Za-z_]*/
 
 #literals
-string-literal := /"([^\\]|\\.)*"/
+string-literal := /"([^\\\\]|\\\\.)*"/
+integer-literal := /[1-9]\\d*/
+number-literal := /[1-9]\\d*\\.\\d*|0?\\.\\d*/
 `

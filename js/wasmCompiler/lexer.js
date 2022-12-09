@@ -4,12 +4,12 @@ class Lexer {
         const symbols = [], ignoredSymbols = [];
 
         function sanitize(s){
-            return s.replace(/[\\.,?{}[\]()^$]/g, "\\$1");
+            return s.replace(/[\\.,?{}[\]()^$\+*|\/]/g, "\\$&");
         }
 
         str.split("\n").filter(i => i != "" && !i.startsWith("#")).map(i => i.trim()).map(i => {    
             const regex1 = /^([0-9A-Za-z\-]+) := \/(([^\\\/]|\\.)*)\/$/;
-            const regex2 = /^ignore ([0-9A-Za-z\-]+)$/;
+            const regex2 = /^ignore (([^:].|:[^=]).+|.{1,2})$/;
             const regex3 = /^basic (([^:].|:[^=]).+|.{1,2})$/;
             if(i.match(regex1) !== null){
                 const [, name, pattern] = i.match(regex1);
