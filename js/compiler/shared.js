@@ -9,7 +9,8 @@ class TokenType{
         return this.name;
     }
 
-    static END = new TokenType("__END__", /^(?!x)x$/)
+    static START = new TokenType("__START__", /^(?!x)x$/);
+    static END = new TokenType("__END__", /^(?!x)x$/);
 }
 
 class Token{
@@ -25,7 +26,7 @@ class Token{
 }
 
 class SymbolString{
-    /** @param {TokenType[]} symbols */
+    /** @param {...TokenType} symbols */
     constructor(...symbols){
         this.symbols = symbols;
         this.repr = symbols.map(i => i.toString()).join(" ");
