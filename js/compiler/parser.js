@@ -92,6 +92,9 @@ class Grammar {
     constructor(startSymbol, ...rules) {
         this.rules = rules;
 
+        this.startRule = new ParseRule(TokenType.START, new SymbolString(startSymbol));
+        this.rules.push(this.startRule);
+
         /** @type {SSet<TokenType>} */
         this.allSymbols = new SSet();
         /** @type {SSet<TokenType>} */
@@ -107,8 +110,8 @@ class Grammar {
         /** @type {SMap<TokenType, SSet<ParseRule>>} */
         this.startsWith = new SMap();
 
-        this.nonTerminals.add(startSymbol);
-        this.allSymbols.add(startSymbol);
+        this.nonTerminals.add(TokenType.START);
+        this.allSymbols.add(TokenType.START);
         this.allSymbols.add(TokenType.END);
 
         for (const rule of rules) {
@@ -136,7 +139,7 @@ class Grammar {
             }
         }
 
-        this.followSets.get(startSymbol).add(TokenType.END);
+        this.followSets.get(TokenType.START).add(TokenType.END);
 
         // set calculations
         let updated = true;
@@ -150,7 +153,7 @@ class Grammar {
                 let brk = false;
                 for (const symbol of rhs) {
                     updated |= firstSet.addAll(...this.firstSets.get(symbol));
-                    if (!this.isNullable(symbol)) {
+                    if (!this.nullableSymbols.has(symbol)) {
                         brk = true;
                         break;
                     }
@@ -165,7 +168,7 @@ class Grammar {
                     if(this.isNonTerminal(symbol)){
                         updated |= this.followSets.get(symbol).addAll(aux);
                     }
-                    if(this.isNullable(symbol)){
+                    if(this.nullableSymbols.has(symbol)){
                         aux = new SSet(...aux);
                         aux.addAll(this.firstSets.get(symbol));
                     }
@@ -186,18 +189,31 @@ class Grammar {
         return this.terminals.has(symbol);
     }
 
-    /** @param {TokenType} symbol */
-    isNullable(symbol) {
-        return this.nullableSymbols.has(symbol);
+    /** @param {SymbolString} string @returns {SSet<TokenType>}*/
+    getFirstSet(string) {
+        if(string.length == 0) return new SSet(TokenType.EPSILON);
+        const res = new SSet(...this.firstSets.get(string[0]));
+        if(this.nullableSymbols.has(string[0])) res.addAll(this.getFirstSet(string.substr(1)));
+        return res;
     }
 
-    /** @param {TokenType} symbol @returns {SSet<TokenType>}*/
-    getFirstSet(symbol) {
-        
+    /** @param {TokenType} string @returns {SSet<TokenType>}*/
+    getFollowSet(string) {
+        if(string.length == 0) return new SSet(TokenType.EPSILON);
+        const res = new SSet(...this.firstSets.get(string[-1]));
+        if(this.nullableSymbols.has(string[-1])) res.addAll(this.getFirstSet(string.substr(0, -1)));
+        return res;
     }
 
-    /** @param {TokenType} symbol @returns {SSet<TokenType>}*/
-    getFollowSet(symbol) {
+    /** @param {SymbolString} string @returns {boolean}*/
+    isNullable(string){
+        for(const symbol of string)
+            if(!this.nullableSymbols.has(symbol))
+                return false;
+        return true;
+    }
 
+    toString(){
+        return this.rules.join("\n");
     }
 }

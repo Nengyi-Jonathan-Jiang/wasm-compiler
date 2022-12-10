@@ -11,6 +11,7 @@ class TokenType{
 
     static START = new TokenType("__START__", /^(?!x)x$/);
     static END = new TokenType("__END__", /^(?!x)x$/);
+    static EPSILON = new TokenType("ε", /^(?!x)x$/);
 }
 
 class Token{
@@ -50,9 +51,8 @@ class SymbolString{
         return this.symbols[Symbol.iterator];
     }
 
-    /** @param {number} start */
-    substr(start, end = -1){
-        return new SymbolString(...this.symbols.slice(start, end));
+    substr(start = 0, end = -1){
+        return new SymbolString(...this.symbols.slice(start, end + (end < 0 ? this.length + 1 : 0)));
     }
 
     /** @param {TokenType} symbol */

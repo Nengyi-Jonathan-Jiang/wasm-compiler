@@ -1,4 +1,8 @@
 const lexer = Lexer.new`
+//Comments
+comment := /\\/\\/[^\\n]*/
+multi-line-comment := /^\\/\\*.*\\*\\//
+
 //declaration keywords
 basic var
 basic param
@@ -36,31 +40,33 @@ basic setpixel
 basic new
 basic this
 
-//arithmetic operators
-basic +
-basic -
-basic *
-basic /
-basic %
-
 //comparison operators
 basic ==
 basic >=
 basic <=
+basic <
+basic >
 basic !=
 
 //assignment operators
 basic =
 basic +=
+basic ++
 basic -=
+basic --
 basic *=
 basic /=
 basic %=
 basic &=
 basic |=
 basic ^=
+basic >>=
+baisc <<=
+basic <<<
+basic >>>
 
-//boolean operators: all seven basic logic gates are represented
+
+//boolean and bitwise operators
 basic !&
 basic !|
 basic !^
@@ -68,6 +74,15 @@ basic !
 basic &
 basic |
 basic ^
+basic <<
+basic >>
+
+//arithmetic operators
+basic +
+basic -
+basic *
+basic /
+basic %
 
 //memory operators
 basic @
@@ -97,4 +112,8 @@ char-literal := /'[^\\\\]|\\\\.'/
 string-literal := /"([^\\\\]|\\\\.)*"/
 number-literal := /[1-9]\\d*\\.\\d*|0?\\.\\d*/
 integer-literal := /[1-9]\\d*|0/
+
+//ignored tokens
+ignore comment
+ignore multi-line-comment
 `
