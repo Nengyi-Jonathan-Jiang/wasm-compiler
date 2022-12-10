@@ -1,5 +1,6 @@
 class TokenType{
-    /** @param {String} name @param {RegExp} pattern */
+    public name: string;
+    public pattern: RegExp;
     constructor(name, pattern) {
         this.name = name;
         this.pattern = pattern;
@@ -15,7 +16,9 @@ class TokenType{
 }
 
 class Token{
-    /** @param {TokenType} symbol @param {String} value */
+    public symbol: TokenType;
+    public value: string;
+
     constructor(symbol, value){
         this.symbol = symbol;
         this.value = value;
@@ -26,9 +29,12 @@ class Token{
     }
 }
 
-class SymbolString{
-    /** @param {...TokenType} symbols */
-    constructor(...symbols){
+class SymbolString extends Array {
+    public symbols: TokenType[];
+    private readonly repr: string;
+    constructor(...symbols:TokenType[]){
+        super();
+
         this.symbols = symbols;
         this.repr = symbols.map(i => i.toString()).join(" ");
 
@@ -55,13 +61,12 @@ class SymbolString{
         return new SymbolString(...this.symbols.slice(start, end + (end < 0 ? this.length + 1 : 0)));
     }
 
-    /** @param {TokenType} symbol */
     concatSymbol(symbol){
         return new SymbolString(...this, symbol);
     }
 
     /** @param {SymbolString} symbols */
-    concatSymbol(symbols){
+    concatSymbols(symbols){
         return new SymbolString(...this, ...symbols);
     }
 }
