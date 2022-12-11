@@ -1,4 +1,4 @@
-const lexer = Lexer.new`
+window.lexer = Lexer.new`
 //Comments
 comment := /\\/\\/[^\\n]*/
 multi-line-comment := /^\\/\\*.*\\*\\//
@@ -61,7 +61,7 @@ basic &=
 basic |=
 basic ^=
 basic >>=
-baisc <<=
+basic <<=
 basic <<<
 basic >>>
 

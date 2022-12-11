@@ -1,8 +1,8 @@
 class Lexer {
     static new([str]:[string]){
-        const symbols = [], ignoredSymbols = [];
+        const symbols: TokenType[] = [], ignoredSymbols: string[] = [];
 
-        function sanitize(s){
+        function sanitize(s:string){
             return s.replace(/[\\.,?{}[\]()^$+*|\/]/g, "\\$&");
         }
 
@@ -28,23 +28,16 @@ class Lexer {
         return new Lexer(symbols, ignoredSymbols);
     }
 
-    /**
-     *
-     * @param {TokenType[]} symbols
-     * @param {String[]} ignoredSymbols
-     */
-    constructor(symbols, ignoredSymbols=[]){
+    private readonly symbols : TokenType[];
+    private readonly ignoredSymbols : Set<string>;
+
+    constructor(symbols: TokenType[], ignoredSymbols: string[]=[]){
 		this.symbols = symbols;
 		this.ignoredSymbols = new Set(ignoredSymbols);
 	}
 
-    /**
-     * @param {string} input
-     * @returns {Token[]}
-     */
-    tokenize(input) {
-        /** @type {Token[]} */
-        const tokens = [];
+    lex(input:string) {
+        const tokens:Token[] = [];
         for (let i = 0; i < input.length;) {
             // If the character is a space, skip it
             if(input.charAt(i).match(/\s/)){
@@ -52,8 +45,7 @@ class Lexer {
                 continue;
             }
 
-            /** @type {Token} */
-            let token = null;
+            let token:Token = null;
 
             let rest = input.slice(i);
             // Find the next token that corresponds to the input
@@ -69,7 +61,6 @@ class Lexer {
 
             // Add the token to the list
             tokens.push(token);
-            console.log(token.toString());
         }
 
         return tokens.filter(({symbol: {name}}) => !this.ignoredSymbols.has(name));
