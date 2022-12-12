@@ -1,15 +1,128 @@
+function transformIterator<T, U>(iterator: Iterator<T>, func: (value: T) => U): Iterator<U> {
+    return {
+        next() {
+            const {value, done} = iterator.next();
+            return {value: done ? undefined : func(value), done};
+        }
+    }
+}
+
+class _map<T, U> {
+    private readonly map = new Map<string, U>;
+
+    public add(key: T, value: U) {
+        let res = this.get(key);
+        this.map.set(key.toString(), value);
+        return res;
+    }
+
+    public del(key: T) {
+        let res = this.get(key);
+        this.map.delete(key.toString());
+        return res;
+    }
+
+    public has(key: T) {
+        return this.map.has(key.toString());
+    }
+
+    public get(key: T): U {
+        return this.map.get(key.toString());
+    }
+
+    public get size() {
+        return Object.keys(this.map).length
+    }
+
+    public [Symbol.iterator] = () : Iterator<[string, U]> => this.map.entries()
+}
+
+class SSet<T> {
+    private readonly map: _map<T, T> = new _map<T, T>();
+
+    constructor(...values: T[]) {
+        this.addAll(...values);
+    }
+
+    public add(value: T){
+        return this.map.add(value, value) !== undefined
+    }
+
+    public addAll(...values: T[]) {
+        return values.map(value => this.add(value)).some(i => i);
+    }
+
+    public del(value: T) {
+        return this.map.del(value);
+    }
+
+    public has(value: T) {
+        return this.map.has(value);
+    }
+
+    public [Symbol.iterator] = () => transformIterator(this.map[Symbol.iterator](), ([, value]) => value);
+
+    public get size() {
+        return this.map.size
+    }
+}
+
+class SMap<T, U> {
+
+    private readonly map: _map<T, [T, U]> = new _map<T, [T, U]>();
+
+    constructor(...entries: [T, U][]) {
+        this.addAll(...entries);
+    }
+
+    public add(key: T, value: U) {
+        return this.map.add(key, [key, value]);
+    }
+
+    public addAll(...entries: [T, U][]) {
+        return entries.map(([key, value]) => this.add(key, value)).some(i => i !== undefined);
+    }
+
+    public del(key: T) {
+        return this.map.del(key);
+    }
+
+    public has(key: T) {
+        return this.map.has(key);
+    }
+
+    public get(key: T) {
+        return this.map.get(key)?.[1];
+    }
+
+    public [Symbol.iterator] = () => transformIterator(this.map[Symbol.iterator](), ([, entry]) => entry)
+
+    public get size() {
+        return this.map.size
+    }
+}
+
 class TokenType {
+    public static compressName = false;
+
+    private static id = 0;
+    private static instances : SMap<string, TokenType> = new SMap<string, TokenType>();
+
     public readonly name: string;
     public readonly pattern: RegExp;
+    private readonly id = ++TokenType.id;
 
-    constructor(name: string, pattern: RegExp) {
+    public static create(name: string, pattern: RegExp = null){
+        return this.instances.get(name) || new TokenType(name, pattern);
+    }
+
+
+    private constructor(name: string, pattern: RegExp) {
         this.name = name;
         this.pattern = pattern;
     }
 
-    public toString() {
-        return this.name;
-    }
+    public toString = () => TokenType.compressName ? String.fromCharCode(this.id) : this.name;
 
     public static readonly START = new TokenType("__START__", /^(?!x)x$/);
     public static readonly END = new TokenType("__END__", /^(?!x)x$/);
@@ -29,9 +142,7 @@ class Token {
         this.end = end;
     }
 
-    public toString() {
-        return `${this.symbol}<${this.value}>`
-    }
+    public toString = () => `${this.symbol}<${this.value}>`
 }
 
 class SymbolString {
@@ -44,93 +155,79 @@ class SymbolString {
     }
 
     public get length() {
-        return this.symbols.length;
+        return this.symbols.length
     }
 
-    public toString() {
-        return this.str
-    }
+    public toString = () => this.str
 
-    public get(i: number) {
-        if (i < 0) i += this.length;
-        return this.symbols[i];
-    }
+    public get = (i: number) => this.symbols[i < 0 ? i + this.length : i]
 
-    public get [Symbol.iterator]() {
-        return this.symbols[Symbol.iterator];
-    }
+    public [Symbol.iterator] = () => this.symbols[Symbol.iterator]();
 
-    public substr(start = 0, end = -1) {
+    public substr(start: number = 0, end: number = -1) {
         return new SymbolString(...this.symbols.slice(start, end + (end < 0 ? this.length + 1 : 0)));
     }
 
-    public concatSymbol(symbol: TokenType) {
-        return new SymbolString(...this, symbol);
-    }
-
-    public concatSymbols(symbols: SymbolString) {
-        return new SymbolString(...this, ...symbols);
-    }
+    public concatSymbol = (symbol: TokenType) => new SymbolString(...this, symbol);
+    public concat = (symbols: SymbolString) => new SymbolString(...this, ...symbols);
 }
 
+abstract class AST {
+    public readonly description: TokenType;
+    protected readonly _children: AST[];
+    protected readonly _value: Token;
 
-
-class SSet<T> {
-    private readonly map: SMap<T, T>;
-
-    /** @param {...T} values */
-    constructor(...values: T[]) {
-        this.map = new SMap<T, T>();
-        this.addAll(...values);
+    protected constructor(description: TokenType, value: Token, ...children: AST[]) {
+        this.description = description;
+        this._children = children;
+        this._value = value;
     }
 
-    public add(value: T) {
-        let res = this.map.has(value);
-        this.map.add(value, value);
-        return res;
+    public abstract get children() : AST[];
+    public abstract get value() : Token;
+
+    public [Symbol.iterator] = () => this.children[Symbol.iterator]()
+    public get isLeaf(){
+        return this._value !== null;
     }
 
-    public addAll(...values: T[]) {
-        return values.map(value => this.add(value)).some(i => i);
+    public static Node = class Node extends AST {
+        constructor(description: TokenType, ...children: AST[]) {
+            super(description, null, ...children);
+        }
+
+        get children(): AST[] {
+            return this._children;
+        }
+
+        get value(): Token {
+            throw new Error("Cannot access value of non-leaf node");
+        }
+
+        public toString(){
+            return `${
+                this.description
+            } {${
+                this.children.length == 0 ? "" : `\n    ${
+                    this.children.join("\n").replaceAll(/\n/g, "\n    ")
+                }`
+            }\n}`;
+        }
     }
 
-    public has(value: T) {
-        return this.map.has(value);
-    }
+    public static Leaf = class Leaf extends AST {
+        constructor(description: TokenType, value: Token) {
+            super(description, value);
+        }
 
-    public get [Symbol.iterator]() : Iterator<T> {
-        return Object.keys(this.map.obj).map(i => this.map.obj[i])[Symbol.iterator]();
-    }
+        get children(): AST[] {
+            throw new Error("Cannot access children of leaf node");
+        }
 
-    public get size(){
-        return this.map.size;
-    }
-}
+        get value(): Token {
+            return this._value;
+        }
 
-class SMap<T, U> {
-    public readonly obj: any;
-
-    constructor() {
-        this.obj = Object.create(null);
-    }
-
-    public add(key: T, value: U) {
-        this.obj["_" + value] = value;
-    }
-
-    public has(key: T) {
-        return ("_" + key) in this.obj;
-    }
-
-    public get(key: T) {
-        return this.obj["_" + key];
-    }
-
-    public get [Symbol.iterator]() : Iterator<[string, U]> {
-        return Object.keys(this.obj).map(i => [i, this.obj["_" + i]] as [string, U])[Symbol.iterator]();
-    }
-
-    public get size(){
-        return Object.keys(this.obj).length;
+        public toString = () => this.value
     }
 }

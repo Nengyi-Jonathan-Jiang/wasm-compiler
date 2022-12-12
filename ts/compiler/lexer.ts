@@ -8,11 +8,11 @@ class Lexer {
 
         str.split("\n").filter(i => i !== "" && !i.startsWith("//")).map(i => i.trim()).map(i => {
             const regex1 = /^([0-9A-Za-z\-]+) := \/(([^\\\/]|\\.)*)\/$/;
-            const regex2 = /^ignore (([^:].|:[^=]).+|.{1,2})$/;
-            const regex3 = /^basic (([^:].|:[^=]).+|.{1,2})$/;
+            const regex2 = /^ignore (\S+)$/;
+            const regex3 = /^basic (\S+)$/;
             if(i.match(regex1) !== null){
                 const [, name, pattern] = i.match(regex1);
-                symbols.push(new TokenType(name, new RegExp(`^${pattern}`, "gs")));
+                symbols.push(TokenType.create(name, new RegExp(`^${pattern}`, "gs")));
             }
             else if(i.match(regex2) !== null){
                 const [, name] = i.match(regex2);
@@ -20,7 +20,7 @@ class Lexer {
             }
             else if(i.match(regex3) !== null){
                 const [, name] = i.match(regex3);
-                symbols.push(new TokenType(name, new RegExp(`^${sanitize(name)}`, "gs")));
+                symbols.push(TokenType.create(name, new RegExp(`^${sanitize(name)}`, "gs")));
             }
             else throw new Error("Error in Lexer specification");
         })

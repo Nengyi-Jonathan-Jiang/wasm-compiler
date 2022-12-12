@@ -117,3 +117,12 @@ integer-literal := /[1-9]\\d*|0/
 ignore comment
 ignore multi-line-comment
 `
+
+const parser = Parser.new`
+start statements
+
+nullable statements
+statements := statement statements
+
+statement := ;
+`;
