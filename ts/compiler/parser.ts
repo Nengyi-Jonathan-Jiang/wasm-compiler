@@ -69,8 +69,8 @@ class Grammar {
         }
 
         for (const symbol of this.allSymbols) {
-            this.firstSets.add(symbol, new SSet());
-            this.followSets.add(symbol, new SSet());
+            this.firstSets.add(symbol, new SSet<TokenType>());
+            this.followSets.add(symbol, new SSet<TokenType>());
             if (this.isTerminal(symbol)) {
                 this.firstSets.get(symbol).add(symbol);
             }
@@ -220,7 +220,7 @@ class Item {
         this.pos = pos;
         this.lookahead = lookahead;
 
-        this.str = `${rule.lhs} := ${rule.rhs.symbols.map((s, i) => (i == pos ? " ● " : " ") + s).join("")}${pos == rule.length ? " ● " : " "}\t\t${[...lookahead].join(" / ")}`;
+        this.str = `${rule.lhs} := ${rule.rhs.symbols.map((s, i) => (i == pos ? " ● " : " ") + s).join("")}${pos == rule.length ? " ● " : " "} ?= ${[...lookahead].join(" / ")}`;
     }
 
     public get isFinished() {
@@ -334,6 +334,73 @@ class ParseTableBuilder {
         return false;
     }
 
+
+    private memoization: SMap<Item, ItemSet> = new SMap<Item, ItemSet>();
+
+    private itemClosure(item: Item): ItemSet {
+        if (this.memoization.has(item)) return this.memoization.get(item);
+
+        const res = new ItemSet(item);
+
+        if (item.isFinished) return res;
+
+        console.log("Computing closure of item " + item);
+
+        let edge = new ItemSet(...res);
+
+        let updated = true;
+        while (updated) {
+            updated = false;
+
+            console.log("  edge (closure): " + edge)
+            let newEdge = new ItemSet();
+
+            for (const itm of edge) {
+
+                console.log("    processing item " + itm);
+
+                if (itm.isFinished || !this.grammar.isNonTerminal(itm.next)) continue;
+
+                const rest = itm.rule.rhs.substr(itm.pos + 1);
+
+                for (const r of this.grammar.startsWith.get(itm.next)) {
+                    console.log("      trying rule " + r);
+
+                    for (const lookahead of itm.lookahead) {
+                        const newItem = new Item(r, 0, new SSet<TokenType>(...this.grammar.getFirstSet(rest.concatSymbol(lookahead))));
+
+                        updated ||= res.add(newItem) && newEdge.add(newItem) && (console.log("        " + newItem), true);
+                    }
+                }
+            }
+
+            edge = newEdge;
+        }
+
+        this.memoization.add(item, res);
+
+        console.log("Closure of item " + item + " is " + res);
+
+        return res;
+    }
+
+    private itemSetClosure(itemSet: ItemSet): ItemSet {
+        const res: ItemSet = new ItemSet(...itemSet);
+        [...itemSet].forEach(item => res.addAll(...this.itemClosure(item)));
+        return res;
+    }
+
+    private successor(itemSet: ItemSet, symbol: TokenType): ItemSet {
+        console.log("computing successor of " + itemSet + " on symbol " + symbol);
+        const res: ItemSet = new ItemSet();
+        for (const item of itemSet) {
+            if (!item.isFinished && item.next == symbol) {
+                res.add(item.shift());
+            }
+        }
+        return this.itemSetClosure(res);
+    }
+
     private generateParsingTable() {
         console.log("Generating parsing table entries...");
 
@@ -376,74 +443,6 @@ class ParseTableBuilder {
             if (nextState === undefined) continue;
             this.table.setGoto(state, symbol, nextState);
         }
-    }
-
-    private memoization: SMap<Item, ItemSet> = new SMap<Item, ItemSet>();
-
-    private itemClosure(item: Item): ItemSet {
-        if (this.memoization.has(item)) return this.memoization.get(item);
-
-        const res = new ItemSet(item);
-
-        if (item.isFinished) return res;
-
-        console.log("Computing closure of item " + item);
-
-        let edge = new ItemSet(...res);
-
-        let updated = true;
-        while (updated) {
-            updated = false;
-
-            let newEdge = new ItemSet();
-
-            for (const itm of edge) {
-
-                console.log("\tprocessing item " + itm);
-
-                if (itm.isFinished || !this.grammar.isNonTerminal(itm.next)) continue;
-
-                const rest = itm.rule.rhs.substr(itm.pos + 1);
-
-                for (const r of this.grammar.startsWith.get(itm.next)) {
-                    console.log("\t\ttrying rule " + r);
-
-                    for (const lookahead of itm.lookahead) {
-                        const newItem = new Item(r, 0, new SSet<TokenType>(...this.grammar.getFirstSet(rest.concatSymbol(lookahead))));
-
-                        updated ||= res.add(newItem);
-                        newEdge.add(newItem);
-                    }
-                }
-            }
-
-            edge = newEdge;
-        }
-
-        this.memoization.add(item, res);
-
-        console.log("Closure of item " + item + " is " + res);
-
-        return res;
-    }
-
-    private itemSetClosure(itemSet: ItemSet): ItemSet {
-        const res: ItemSet = new ItemSet(...itemSet);
-        for (const item of itemSet) {
-            res.addAll(...this.itemClosure(item));
-        }
-        return res;
-    }
-
-    private successor(itemSet: ItemSet, symbol: TokenType): ItemSet {
-        console.log("computing successor of " + itemSet + " on symbol " + symbol);
-        const res: ItemSet = new ItemSet();
-        for (const item of itemSet) {
-            if (!item.isFinished && item.next == symbol) {
-                res.add(item.shift());
-            }
-        }
-        return this.itemSetClosure(res);
     }
 }
 
@@ -508,7 +507,7 @@ class Parser {
         const rules: ParseRule[] = [];
         let startSymbol: TokenType;
 
-        str.split("\n").filter(i => i !== "" && !i.startsWith("//")).map(i => i.trim()).map(i => {
+        str.split(/\s*\n\s*/g).filter(i => i !== "" && !i.startsWith("//")).map(i => {
             const regex1 = /^(\S+) := (\S+( \S+)*)/;
             const regex2 = /^start (\S+)$/;
             const regex3 = /^nullable (\S+)$/;
@@ -523,7 +522,7 @@ class Parser {
                 const [, _lhs] = i.match(regex3);
                 const lhs = TokenType.create(_lhs);
                 rules.push(new ParseRule(lhs, new SymbolString()));
-            } else throw new Error("Error in Lexer specification");
+            } else throw new Error("Error in Parser specification");
         })
 
         console.log(rules.map(i => i.toString()).join("\n"));

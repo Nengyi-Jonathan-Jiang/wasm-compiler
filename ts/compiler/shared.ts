@@ -11,7 +11,7 @@ class _map<T, U> {
     private readonly map = new Map<string, U>;
 
     public add(key: T, value: U) {
-        let res = this.get(key);
+        let res = !this.has(key);
         this.map.set(key.toString(), value);
         return res;
     }
@@ -31,7 +31,7 @@ class _map<T, U> {
     }
 
     public get size() {
-        return Object.keys(this.map).length
+        return this.map.size;
     }
 
     public [Symbol.iterator] = () : Iterator<[string, U]> => this.map.entries()
@@ -45,7 +45,7 @@ class SSet<T> {
     }
 
     public add(value: T){
-        return this.map.add(value, value) !== undefined
+        return this.map.add(value, value)
     }
 
     public addAll(...values: T[]) {
@@ -80,7 +80,7 @@ class SMap<T, U> {
     }
 
     public addAll(...entries: [T, U][]) {
-        return entries.map(([key, value]) => this.add(key, value)).some(i => i !== undefined);
+        return entries.map(([key, value]) => this.add(key, value)).some(i => i);
     }
 
     public del(key: T) {
