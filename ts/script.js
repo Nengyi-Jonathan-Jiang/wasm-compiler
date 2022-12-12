@@ -134,9 +134,14 @@ basic b
 `
 function start() {
     window.parser = Parser.new`
-        start S
-        S := X X
-        X := a X
-        X := b
+        // start S
+        // S := X X
+        // X := a X
+        // X := b
+
+        start ss
+        nullable ss
+        ss := s ss
+        s := a
     `;
 }

@@ -65,6 +65,10 @@ class SSet<T> {
     public get size() {
         return this.map.size
     }
+
+    public toString() {
+        return `{${[...this].join(", ")}}`
+    }
 }
 
 class SMap<T, U> {
@@ -100,6 +104,10 @@ class SMap<T, U> {
     public get size() {
         return this.map.size
     }
+
+    public toString() {
+        return `{${[...this].map(([key, value]) => `${key} => ${value}`).join(", ")}}`
+    }
 }
 
 class TokenType {
@@ -120,6 +128,8 @@ class TokenType {
     private constructor(name: string, pattern: RegExp) {
         this.name = name;
         this.pattern = pattern;
+
+        TokenType.instances.add(name, this);
     }
 
     public toString = () => TokenType.compressName ? String.fromCharCode(this.id) : this.name;
@@ -209,7 +219,7 @@ abstract class AST {
                 this.description
             } {${
                 this.children.length == 0 ? "" : `\n    ${
-                    this.children.join("\n").replaceAll(/\n/g, "\n    ")
+                    this.children.map(i => i.toString()).join("\n").replaceAll(/\n/g, "\n    ")
                 }`
             }\n}`;
         }

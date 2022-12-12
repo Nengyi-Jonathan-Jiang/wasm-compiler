@@ -147,6 +147,18 @@ class Grammar {
     public toString() {
         return this.rules.join("\n");
     }
+
+    public logSelf() {
+        console.log(`Grammar\n====RULES=====\n${
+            this.rules.join("\n")
+        }\n===NULLABLE===\n${
+            this.nullableSymbols
+        }\n====FIRST=====\n${
+            this.firstSets
+        }\n====FOLLOW====\n${
+            this.followSets
+        }`)
+    }
 }
 
 class TableEntry {
@@ -238,30 +250,72 @@ class Item {
     public shift() {
         return new Item(this.rule, this.pos + 1, this.lookahead);
     }
+
+    public static merge(s1: Item, s2: Item) {
+        return new Item(s1.rule, s1.pos, new SSet<TokenType>(...s1.lookahead, ...s2.lookahead));
+    }
 }
 
 
-class ItemSet extends SSet<Item> {
+class ItemSet {
+    private map: Map<string, Item> = new Map<string, Item>();
     private str: string;
+    private dirty: boolean = false;
 
     constructor(...items: Item[]) {
-        super(...items);
-        this.updateRepr();
+        this.addAll(...items);
     }
 
-    private updateRepr(){
+    private updateRepr() {
         this.str = `{\n\t${[...this].join("\n\t")}\n}`;
     }
 
-    public add(item: Item) {
-        let res = super.add(item);
-        this.updateRepr();
+    public toString() {
+        if(this.dirty) this.updateRepr();
+        return this.str;
+    }
+
+    private stringify(item: Item){
+        return item.rule + "@" + item.pos;
+    }
+
+    public add(value: Item) {
+        if (this.has(value)){
+            const s1 = this.get(value), s2 = value;
+            if(s1.toString() == s2.toString()) return false;
+            this.map.set(this.stringify(s1), Item.merge(s1, s2));
+            return true;
+        }
+        this.map.set(this.stringify(value), value);
+        this.dirty = true;
+        return true;
+    }
+
+    public addAll(...values: Item[]) {
+        return values.map(value => this.add(value)).some(i => i);
+    }
+
+
+    public del(key: Item) {
+        let res = this.get(key);
+        this.map.delete(this.stringify(key));
+        if (res !== undefined) this.dirty = true;
         return res;
     }
 
-    public toString() {
-        return this.str;
+    public has(key: Item) {
+        return this.map.has(this.stringify(key));
     }
+
+    public get(key: Item): Item {
+        return this.map.get(this.stringify(key));
+    }
+
+    public get size() {
+        return this.map.size;
+    }
+
+    public [Symbol.iterator] = (): Iterator<Item> => transformIterator(this.map.entries(), ([, value]) => value)
 }
 
 class ParseTableBuilder {
@@ -280,7 +334,7 @@ class ParseTableBuilder {
         this.successors = new SMap<number, SMap<TokenType, number>>();
         this.generateConfiguratingSets();
 
-        console.log(this.configuratingSets);
+        console.log(this.configuratingSets.toString());
 
         this.table = new ParsingTable(this.configuratingSets.size);
         this.generateParsingTable();
@@ -290,6 +344,7 @@ class ParseTableBuilder {
         console.log("Generating configurating sets...");
 
         const initialState: ItemSet = this.itemClosure(this.startItem);
+        console.log("Initial state: " + initialState);
         this.configuratingSets.add(initialState, 0);
         this.successors.add(0, new SMap<TokenType, number>());
 
@@ -299,8 +354,6 @@ class ParseTableBuilder {
         while (updated) {
             updated = false;
 
-            console.log("edge: \n" + [...edge].map(i => i.toString()).join("\n\n"));
-
             const newEdge: SSet<ItemSet> = new SSet<ItemSet>();
             for (const configuratingSet of edge) {
                 const state = this.configuratingSets.get(configuratingSet);
@@ -308,9 +361,8 @@ class ParseTableBuilder {
                     const successor = this.successor(configuratingSet, symbol);
                     if (successor.size == 0) continue;
 
-                    console.log("Successor of " + configuratingSet + " is " + successor);
-
                     if (this.addConfiguratingState(state, symbol, successor)) {
+                        console.log("Successor of " + configuratingSet + " on " + symbol + " is " + successor);
                         updated = true;
                         newEdge.add(successor);
                     }
@@ -344,7 +396,7 @@ class ParseTableBuilder {
 
         if (item.isFinished) return res;
 
-        console.log("Computing closure of item " + item);
+        console.log("Computing closure of: " + item);
 
         let edge = new ItemSet(...res);
 
@@ -352,24 +404,25 @@ class ParseTableBuilder {
         while (updated) {
             updated = false;
 
-            console.log("  edge (closure): " + edge)
             let newEdge = new ItemSet();
 
             for (const itm of edge) {
-
-                console.log("    processing item " + itm);
 
                 if (itm.isFinished || !this.grammar.isNonTerminal(itm.next)) continue;
 
                 const rest = itm.rule.rhs.substr(itm.pos + 1);
 
                 for (const r of this.grammar.startsWith.get(itm.next)) {
-                    console.log("      trying rule " + r);
 
                     for (const lookahead of itm.lookahead) {
                         const newItem = new Item(r, 0, new SSet<TokenType>(...this.grammar.getFirstSet(rest.concatSymbol(lookahead))));
 
-                        updated ||= res.add(newItem) && newEdge.add(newItem) && (console.log("        " + newItem), true);
+                        const isNew = res.add(newItem);
+                        if (isNew) {
+                            console.log("    added item: " + newItem + "\n        from " + itm);
+                            updated = true;
+                            newEdge.add(newItem);
+                        }
                     }
                 }
             }
@@ -378,8 +431,6 @@ class ParseTableBuilder {
         }
 
         this.memoization.add(item, res);
-
-        console.log("Closure of item " + item + " is " + res);
 
         return res;
     }
@@ -391,8 +442,8 @@ class ParseTableBuilder {
     }
 
     private successor(itemSet: ItemSet, symbol: TokenType): ItemSet {
-        console.log("computing successor of " + itemSet + " on symbol " + symbol);
         const res: ItemSet = new ItemSet();
+
         for (const item of itemSet) {
             if (!item.isFinished && item.next == symbol) {
                 res.add(item.shift());
@@ -466,17 +517,21 @@ class Parser {
                 if (entry === undefined) throw new Error("Parse error: Unknown error");
 
                 if (entry instanceof TableEntry.Shift) {
+                    console.log("shift on " + token);
                     this.stateStack.push(entry.nextState);
                     this.nodeStack.push(new AST.Leaf(token.symbol, token));
                 } else if (entry instanceof TableEntry.Accept) {
+                    console.log("accept on " + token);
                     this.finished = true;
                 } else if (entry instanceof TableEntry.Reduce) {
-                    const {rule: {lhs, length}} = entry;
+                    const {rule, rule: {lhs, length}} = entry;
+
+                    console.log(`reduce by ${rule} on ${token}`);
 
                     for (let j = 0; j < length; j++) this.stateStack.pop();
                     this.stateStack.push(table.getGoto(this.stateStack[this.stateStack.length - 1], lhs));
 
-                    if (length > 1) {
+                    if (length != 1) {
                         const children: AST[] = new Array(length);
                         for (let j = length; j-- > 0;) children[j] = this.nodeStack.pop();
                         this.nodeStack.push(new AST.Node(lhs, ...children));
@@ -525,9 +580,8 @@ class Parser {
             } else throw new Error("Error in Parser specification");
         })
 
-        console.log(rules.map(i => i.toString()).join("\n"));
-
         const grammar = new Grammar(startSymbol, ...rules);
+        grammar.logSelf();
         const table = new ParseTableBuilder(grammar).table;
         return new Parser(table);
     }

@@ -60,9 +60,11 @@ class Lexer {
             if(token === null) throw new Error("Error while lexing input: invalid token");
 
             // Add the token to the list
-            tokens.push(token);
+            if(!this.ignoredSymbols.has(token.symbol.name)) tokens.push(token);
         }
 
-        return tokens.filter(({symbol: {name}}) => !this.ignoredSymbols.has(name));
+        tokens.push(new Token(TokenType.END, "", -1, -1));
+
+        return tokens;
     }
 }
