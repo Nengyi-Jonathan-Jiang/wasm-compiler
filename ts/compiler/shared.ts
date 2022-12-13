@@ -137,6 +137,7 @@ class TokenType {
     public static readonly START = new TokenType("__START__", /^(?!x)x$/);
     public static readonly END = new TokenType("__END__", /^(?!x)x$/);
     public static readonly EPSILON = new TokenType("ε", /^(?!x)x$/);
+    public static readonly UNKNOWN = new TokenType("__ERROR__", /^(?!x)x$/);
 }
 
 class Token {

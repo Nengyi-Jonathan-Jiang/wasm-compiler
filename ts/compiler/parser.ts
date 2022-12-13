@@ -220,7 +220,11 @@ class Item {
         this.pos = pos;
         this.lookahead = lookahead;
 
-        this.str = `${rule.lhs} := ${rule.rhs.symbols.map((s, i) => (i == pos ? " ● " : " ") + s).join("")}${pos == rule.length ? " ● " : " "} ?= ${[...lookahead].join(" / ")}`;
+        this.str = `${rule.lhs} := ${
+            [...rule.rhs.symbols.slice(0, pos), "●", rule.rhs.symbols.slice(pos)].join(" ")
+        } ?= ${
+            [...lookahead].join(" / ")
+        }`;
     }
 
     public get isFinished() {
@@ -270,14 +274,20 @@ class ItemSet {
     public add(value: Item) {
         if (this.has(value)){
             const s1 = this.get(value), s2 = value;
-            if(s1.toString() === s2.toString()) return false;
-            this.map.set(this.stringify(s1), Item.merge(s1, s2));
-            console.log(`    Merging items in itemset: ${s1}    and    ${s2}`);
-            return true;
+
+            const merged = Item.merge(s1, s2)
+            if(s1.lookahead.size == merged.lookahead.size) return false;
+
+            this._add(merged);
+
+            return this.dirty = true;
         }
+        this._add(value);
+        return this.dirty = true;
+    }
+
+    private _add(value : Item){
         this.map.set(this.stringify(value), value);
-        this.dirty = true;
-        return true;
     }
 
     public addAll(...values: Item[]) {
@@ -381,8 +391,6 @@ class ParseTableBuilder {
 
         if (item.isFinished) return res;
 
-        console.log("Finding closure of " + item);
-
         let edge = new ItemSet(...res);
 
         let updated = true;
@@ -397,8 +405,6 @@ class ParseTableBuilder {
 
                 const rest = itm.rule.rhs.substr(itm.pos + 1);
 
-                if(rest.length == 0) continue;
-
                 for (const r of this.grammar.startsWith.get(itm.next)) {
 
                     for (const lookahead of itm.lookahead) {
@@ -406,7 +412,6 @@ class ParseTableBuilder {
 
                         const isNew = res.add(newItem);
                         if (isNew) {
-                            console.log("    added " + newItem + " by expanding " + rest + " -> " + r + " with lookahead " + lookahead);
                             updated = true;
                             newEdge.add(newItem);
                         }

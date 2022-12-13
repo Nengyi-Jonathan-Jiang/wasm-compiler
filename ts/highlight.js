@@ -44,6 +44,9 @@ function basicMap(tokens){
     let m = new Map();
     for(let token of tokens){
         switch(token.symbol.name){
+            case "__ERROR__":
+                m.set(token, "lex-error");
+                break;
             case "number-literal":
             case "integer-literal":
                 m.set(token, "number-literal");
@@ -98,7 +101,7 @@ function highlightBasic(tokens, originalText, targetDiv){
     for(let tk of [...tokens].reverse()){
         if(tk.symbol === TokenType.END) continue;
         let {start, end} = tk;
-        res = `${res.substring(0, start)}${"\0"}span class="${m.get(tk) || "unknown"}"${"\1"}${res.substring(start, end)}${"\0"}span${"\1"}${res.substring(end)}`;
+        res = `${res.substring(0, start)}${"\0"}span class="${m.get(tk) || "unknown"}"${"\1"}${res.substring(start, end)}${"\0"}/span${"\1"}${res.substring(end)}`;
     }
 
     targetDiv.innerHTML = res

@@ -55,13 +55,14 @@ textarea{
 
 textarea::selection{ background: #FFF2 !important; }
 
-span.number-literal{ color: var(--theme-color-purple); }
-span.control-keyword{ color: var(--theme-color-red); }
-span.keyword{ color: var(--theme-color-red); }
-span.string-literal{ color: var(--theme-color-yellow); }
-span.type-name{ color: var(--theme-color-green); }
-span.operator{ color: var(--theme-color-red); }
-span.unknown{ color: var(--theme-shade-8); }
+span.number-literal{ color: var(--theme-color-purple) }
+span.control-keyword{ color: var(--theme-color-red) }
+span.keyword{ color: var(--theme-color-red) }
+span.string-literal{ color: var(--theme-color-yellow) }
+span.type-name{ color: var(--theme-color-green) }
+span.operator{ color: var(--theme-color-red) }
+span.unknown{ color: var(--theme-shade-8) }
+span.lex-error{ color: var(--theme-shade-8); text-decoration: underline var(--theme-color-red) wavy }
 
 #code-output{
     position: absolute;

@@ -133,3 +133,14 @@ console.log = (...msgs) => {
     }
     document.getElementById("console").scrollIntoView({block: "end", inline: "nearest", behavior: "smooth"});
 }
+const _err = console.error;
+console.error = (...msgs) => {
+    _log(...msgs);
+    for(let msg of msgs){
+        const s = document.createElement("span");
+        s.className = "error";
+        s.innerText = msg.toString();
+        document.getElementById("console").appendChild(s);
+    }
+    document.getElementById("console").scrollIntoView({block: "end", inline: "nearest", behavior: "smooth"});
+}

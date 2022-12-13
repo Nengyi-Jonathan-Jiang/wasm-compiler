@@ -57,7 +57,9 @@ class Lexer {
                     break;
                 }
             }
-            if(token === null) throw new Error("Error while lexing input: invalid token");
+            if(token === null){
+                token = new Token(TokenType.UNKNOWN, input.charAt(i), i, ++i);
+            }
 
             // Add the token to the list
             if(!this.ignoredSymbols.has(token.symbol.name)) tokens.push(token);

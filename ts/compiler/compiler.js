@@ -120,63 +120,111 @@ const lexer = Lexer.new`
     ignore multi-line-comment
 `
 
-// const parser = Parser.new`
-//     start declarations
-//
-//     nullable declarations
-//     declarations := declaration declarations
-//
-//     declaration := method-declaration
-//     declaration := variable-declaration
-//     declaration := ;
-//
-//     method-declaration := decl func symbol { statements }
-//     variable-declaration := type var symbol ;
-//
-//     type := symbol
-//
-//     nullable statements
-//     statements := statement statements
-//
-//     statement := print-statement
-//     print-statement := print expression ;
-//
-//     expression := prefix-expression
-//
-//     prefix-expression := postfix-expression
-//     prefix-expression := ++ prefix-expression
-//     prefix-expression := -- prefix-expression
-//
-//     postfix-expression := primary-expression
-//     postfix-expression := postfix-expression ++
-//     // postfix-expression := postfix-expression --
-//     // postfix-expression := function-call
-//     // postfix-expression := subscript-call
-//     // postfix-expression := member-access
-//     //
-//     // function-call := postfix-expression ( argument-list )
-//     // subscript-call := postfix-expression ( argument-list )
-//
-//     // member-access := postfix-expression . symbol
-//     // member-access := postfix-expression @ symbol
-//
-//     // nullable argument-list
-//
-//     primary-expression := value
-//     primary-expression := ( expression )
-//
-//     value := number-literal
-//     value := integer-literal
-//     value := string-literal
-//     value := char-literal
-// `;
-
 const parser = Parser.new`
     start declarations
 
     nullable declarations
-    declarations := declarations declaration
+    declarations := declaration declarations
+
+    declaration := method-declaration
+    declaration := variable-declaration
     declaration := ;
+
+    method-declaration := decl func symbol { statements }
+    variable-declaration := type var symbol ;
+
+    type := symbol
+
+    nullable statements
+    statements := statement statements
+
+    statement := print-statement
+    statement := expression ;
+    print-statement := print expression ;
+
+    // expression := assignment-expression
+    //
+    // assignment-expression := boolean-expression
+    // assignment-expression := boolean-expression = assignment-expression
+    // assignment-expression := boolean-expression += assignment-expression
+    // assignment-expression := boolean-expression -= assignment-expression
+    // assignment-expression := boolean-expression *= assignment-expression
+    // assignment-expression := boolean-expression /= assignment-expression
+    // assignment-expression := boolean-expression %= assignment-expression
+    // assignment-expression := boolean-expression &= assignment-expression
+    // assignment-expression := boolean-expression |= assignment-expression
+    // assignment-expression := boolean-expression ^= assignment-expression
+    // assignment-expression := boolean-expression >>= assignment-expression
+    // assignment-expression := boolean-expression <<= assignment-expression
+    //
+    // boolean-expression := equality-expression
+    // boolean-expression := boolean-expression & equality-expression
+    // boolean-expression := boolean-expression ^ equality-expression
+    // boolean-expression := boolean-expression | equality-expression
+    // boolean-expression := boolean-expression !& equality-expression
+    // boolean-expression := boolean-expression !^ equality-expression
+    // boolean-expression := boolean-expression !| equality-expression
+    //
+    // equality-expression := relational-expression
+    // equality-expression := relational-expression == relational-expression
+    // equality-expression := relational-expression != relational-expression
+    //
+    // relational-expression := shift-expression
+    // relational-expression := shift-expression > shift-expression
+    // relational-expression := shift-expression < shift-expression
+    // relational-expression := shift-expression >= shift-expression
+    // relational-expression := shift-expression <= shift-expression
+
+    expression := shift-expression
+
+    shift-expression := additive-expression
+    shift-expression := shift-expression << additive-expression
+    shift-expression := shift-expression >> additive-expression
+
+    additive-expression := multiplicative-expression
+    additive-expression := additive-expression + multiplicative-expression
+    additive-expression := additive-expression - multiplicative-expression
+
+    multiplicative-expression := prefix-expression
+    multiplicative-expression := multiplicative-expression * prefix-expression
+    multiplicative-expression := multiplicative-expression / prefix-expression
+    multiplicative-expression := multiplicative-expression % prefix-expression
+
+    prefix-expression := postfix-expression
+    prefix-expression := ++ prefix-expression
+    prefix-expression := -- prefix-expression
+    prefix-expression := >>> prefix-expression
+    prefix-expression := <<< prefix-expression
+    prefix-expression := ! prefix-expression
+    prefix-expression := alloc prefix-expression
+    prefix-expression := dealloc prefix-expression
+    prefix-expression := # prefix-expression
+    prefix-expression := @ prefix-expression
+
+    postfix-expression := primary-expression
+    postfix-expression := postfix-expression ++
+    postfix-expression := postfix-expression --
+    postfix-expression := postfix-expression >>>
+    postfix-expression := postfix-expression <<<
+    postfix-expression := function-call
+    postfix-expression := subscript-call
+    postfix-expression := member-access
+
+    function-call := postfix-expression ( argument-list )
+    subscript-call := postfix-expression [ argument-list ]
+
+    member-access := postfix-expression . symbol
+    member-access := postfix-expression @ symbol
+
+    nullable argument-list
+
+    primary-expression := value
+    primary-expression := ( expression )
+
+    value := number-literal
+    value := integer-literal
+    value := string-literal
+    value := char-literal
 `;
 
 function compile(code){
