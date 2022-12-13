@@ -6,7 +6,7 @@ class Lexer {
             return s.replace(/[\\.,?{}[\]()^$+*|\/]/g, "\\$&");
         }
 
-        str.split("\n").filter(i => i !== "" && !i.startsWith("//")).map(i => i.trim()).map(i => {
+        str.split(/\s*\n\s*/g).filter(i => i !== "" && !i.startsWith("//")).map(i => {
             const regex1 = /^([0-9A-Za-z\-]+) := \/(([^\\\/]|\\.)*)\/$/;
             const regex2 = /^ignore (\S+)$/;
             const regex3 = /^basic (\S+)$/;

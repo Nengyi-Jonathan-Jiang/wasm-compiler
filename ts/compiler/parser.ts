@@ -334,8 +334,6 @@ class ParseTableBuilder {
         this.successors = new SMap<number, SMap<TokenType, number>>();
         this.generateConfiguratingSets();
 
-        console.log(this.configuratingSets.toString());
-
         this.table = new ParsingTable(this.configuratingSets.size);
         this.generateParsingTable();
     }
@@ -344,7 +342,6 @@ class ParseTableBuilder {
         console.log("Generating configurating sets...");
 
         const initialState: ItemSet = this.itemClosure(this.startItem);
-        console.log("Initial state: " + initialState);
         this.configuratingSets.add(initialState, 0);
         this.successors.add(0, new SMap<TokenType, number>());
 
@@ -362,7 +359,6 @@ class ParseTableBuilder {
                     if (successor.size == 0) continue;
 
                     if (this.addConfiguratingState(state, symbol, successor)) {
-                        console.log("Successor of " + configuratingSet + " on " + symbol + " is " + successor);
                         updated = true;
                         newEdge.add(successor);
                     }
@@ -396,8 +392,6 @@ class ParseTableBuilder {
 
         if (item.isFinished) return res;
 
-        console.log("Computing closure of: " + item);
-
         let edge = new ItemSet(...res);
 
         let updated = true;
@@ -419,7 +413,6 @@ class ParseTableBuilder {
 
                         const isNew = res.add(newItem);
                         if (isNew) {
-                            console.log("    added item: " + newItem + "\n        from " + itm);
                             updated = true;
                             newEdge.add(newItem);
                         }
@@ -581,7 +574,7 @@ class Parser {
         })
 
         const grammar = new Grammar(startSymbol, ...rules);
-        grammar.logSelf();
+        // grammar.logSelf();
         const table = new ParseTableBuilder(grammar).table;
         return new Parser(table);
     }

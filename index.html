@@ -1,28 +1,34 @@
 <!doctype html>
 <html class="no-js" lang="">
-  <head>
-    <meta charset="utf-8">
-    <title></title>
-    <meta name="description" content="">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <head>
+        <meta charset="utf-8">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <meta property="og:title" content="">
-    <meta property="og:type" content="">
-    <meta property="og:url" content="">
-    <meta property="og:image" content="">
+        <meta property="og:title" content="">
+        <meta property="og:type" content="">
+        <meta property="og:url" content="">
+        <meta property="og:image" content="">
 
-    <link rel="stylesheet" href="css/normalize.css">
-    <link rel="stylesheet" href="css/main.css">
+        <link rel="stylesheet" href="css/main.css">
+        <link rel="stylesheet" href="css/style.css">
 
-    <meta name="theme-color" content="#fafafa">
+        <meta name="theme-color" content="#fafafa">
 
-    <script src="ts/compiler/shared.js"></script>
-    <script src="ts/compiler/lexer.js"></script>
-    <script src="ts/compiler/parser.js"></script>
-    <script src="ts/compiler/emitter.js"></script>
-    <script src="ts/compiler/compiler.js"></script>
-  </head>
-  <body>
-    <script src="ts/script.js"></script>
-  </body>
+        <script src="ts/compiler/shared.js"></script>
+        <script src="ts/compiler/lexer.js"></script>
+        <script src="ts/compiler/parser.js"></script>
+        <script src="ts/compiler/emitter.js"></script>
+        <script src="ts/compiler/compiler.js"></script>
+    </head>
+    <body>
+        <div id="code-editor">
+            <div id="text">
+                <div id="highlighted"></div>
+                <textarea id="input" type="text" spellcheck="false"></textarea>
+            </div>
+        </div>
+        <script src="ts/script.js"></script>
+    </body>
 </html>

@@ -152,7 +152,9 @@ class Token {
         this.end = end;
     }
 
-    public toString = () => `${this.symbol}<${this.value}>`
+    public toString = () => this.symbol.toString() == this.value
+        ? `"${this.symbol}"`
+        : `${this.symbol}<${this.value}>`
 }
 
 class SymbolString {
