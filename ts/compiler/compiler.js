@@ -3,6 +3,12 @@ const lexer = Lexer.new`
     comment := /\\/\\/[^\\n]*/
     multi-line-comment := /^\\/\\*.*\\*\\//
 
+    //literals
+    char-literal := /'[^\\\\]|\\\\.'/
+    string-literal := /"([^\\\\]|\\\\.)*"/
+    number-literal := /([1-9]\\d*|0)\\.\\d*|\\.\\d+/
+    integer-literal := /[1-9]\\d*|0/
+
     //declaration keywords
     basic decl
     basic var
@@ -108,12 +114,6 @@ const lexer = Lexer.new`
 
     symbol := /[$A-Za-z_][$0-9A-Za-z_]*/
 
-    //literals
-    char-literal := /'[^\\\\]|\\\\.'/
-    string-literal := /"([^\\\\]|\\\\.)*"/
-    number-literal := /[1-9]\\d*\\.\\d*|0?\\.\\d*/
-    integer-literal := /[1-9]\\d*|0/
-
     //ignored tokens
     ignore comment
     ignore multi-line-comment
@@ -138,7 +138,7 @@ const parser = Parser.new`
     statements := statement statements
 
     statement := print-statement
-    print-statement := print expression
+    print-statement := print expression ;
 
     expression := primary-expression
     expression := primary-expression + expression

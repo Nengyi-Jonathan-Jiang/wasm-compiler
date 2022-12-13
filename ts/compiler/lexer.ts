@@ -12,7 +12,7 @@ class Lexer {
             const regex3 = /^basic (\S+)$/;
             if(i.match(regex1) !== null){
                 const [, name, pattern] = i.match(regex1);
-                symbols.push(TokenType.create(name, new RegExp(`^${pattern}`, "gs")));
+                symbols.push(TokenType.create(name, new RegExp(`^(${pattern})`, "gs")));
             }
             else if(i.match(regex2) !== null){
                 const [, name] = i.match(regex2);
@@ -20,7 +20,7 @@ class Lexer {
             }
             else if(i.match(regex3) !== null){
                 const [, name] = i.match(regex3);
-                symbols.push(TokenType.create(name, new RegExp(`^${sanitize(name)}`, "gs")));
+                symbols.push(TokenType.create(name, new RegExp(`^(${sanitize(name)})`, "gs")));
             }
             else throw new Error("Error in Lexer specification");
         })
@@ -32,9 +32,9 @@ class Lexer {
     private readonly ignoredSymbols : Set<string>;
 
     constructor(symbols: TokenType[], ignoredSymbols: string[]=[]){
-		this.symbols = symbols;
-		this.ignoredSymbols = new Set(ignoredSymbols);
-	}
+        this.symbols = symbols;
+        this.ignoredSymbols = new Set(ignoredSymbols);
+    }
 
     lex(input:string) {
         const tokens:Token[] = [];

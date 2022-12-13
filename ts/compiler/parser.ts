@@ -451,7 +451,7 @@ class ParseTableBuilder {
         let i = 0;
         for (const [itemSet, state] of this.configuratingSets) {
             this.generateActionSetEntries(state, itemSet);
-            this.generateGotoSetEntries(state, itemSet);
+            this.generateGotoSetEntries(state);
 
             console.log(`Generated parsing table entries for ${++i} states (currently on state ${state})`);
         }
@@ -481,7 +481,7 @@ class ParseTableBuilder {
         this.table.setActionShift(state, item.next, nextState);
     }
 
-    private generateGotoSetEntries(state: number, itemSet: ItemSet) {
+    private generateGotoSetEntries(state: number) {
         for (const symbol of this.grammar.nonTerminals) {
             const nextState = this.successors.get(state).get(symbol);
             if (nextState === undefined) continue;
