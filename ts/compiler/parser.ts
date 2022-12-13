@@ -147,18 +147,6 @@ class Grammar {
     public toString() {
         return this.rules.join("\n");
     }
-
-    public logSelf() {
-        console.log(`Grammar\n====RULES=====\n${
-            this.rules.join("\n")
-        }\n===NULLABLE===\n${
-            this.nullableSymbols
-        }\n====FIRST=====\n${
-            this.firstSets
-        }\n====FOLLOW====\n${
-            this.followSets
-        }`)
-    }
 }
 
 class TableEntry {
@@ -510,16 +498,12 @@ class Parser {
                 if (entry === undefined) throw new Error("Parse error: Unknown error");
 
                 if (entry instanceof TableEntry.Shift) {
-                    console.log("shift on " + token);
                     this.stateStack.push(entry.nextState);
                     this.nodeStack.push(new AST.Leaf(token.symbol, token));
                 } else if (entry instanceof TableEntry.Accept) {
-                    console.log("accept on " + token);
                     this.finished = true;
                 } else if (entry instanceof TableEntry.Reduce) {
-                    const {rule, rule: {lhs, length}} = entry;
-
-                    console.log(`reduce by ${rule} on ${token}`);
+                    const {rule: {lhs, length}} = entry;
 
                     for (let j = 0; j < length; j++) this.stateStack.pop();
                     this.stateStack.push(table.getGoto(this.stateStack[this.stateStack.length - 1], lhs));
@@ -574,7 +558,6 @@ class Parser {
         })
 
         const grammar = new Grammar(startSymbol, ...rules);
-        // grammar.logSelf();
         const table = new ParseTableBuilder(grammar).table;
         return new Parser(table);
     }

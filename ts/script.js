@@ -120,3 +120,16 @@ input.onkeydown = e => {
         input.oninput(null);
     }
 }
+
+
+
+const _log = console.log;
+console.log = (...msgs) => {
+    _log(...msgs);
+    for(let msg of msgs){
+        const s = document.createElement("span");
+        s.innerText = msg.toString();
+        document.getElementById("console").appendChild(s);
+    }
+    document.getElementById("console").scrollIntoView({block: "end", inline: "nearest", behavior: "smooth"});
+}

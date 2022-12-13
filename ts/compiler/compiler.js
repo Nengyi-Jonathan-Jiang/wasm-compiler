@@ -38,7 +38,6 @@ const lexer = Lexer.new`
     //memory keywords
     basic ptr
     basic ref
-    basic deref
     basic alloc
 
     //misc keywords
@@ -92,8 +91,10 @@ const lexer = Lexer.new`
     basic %
 
     //memory operators
-    basic @
-    basic #
+        // value = ptr@field, value = @ptr
+        basic @
+        // ptr = #value
+        basic #
 
     //grouping symbols
     basic (
@@ -140,9 +141,26 @@ const parser = Parser.new`
     statement := print-statement
     print-statement := print expression ;
 
-    expression := primary-expression
-    expression := primary-expression + expression
-    expression := primary-expression - expression
+    expression := prefix-expression
+
+    prefix-expression := postfix-expression
+    prefix-expression := ++ prefix-expression
+    prefix-expression := -- prefix-expression
+
+    postfix-expression := primary-expression
+    postfix-expression := postfix-expression ++
+    postfix-expression := postfix-expression --
+    postfix-expression := function-call
+    postfix-expression := subscript-call
+    postfix-expression := member-access
+
+    function-call := postfix-expression ( argument-list )
+    subscript-call := postfix-expression ( argument-list )
+
+    member-access := postfix-expression . symbol
+    member-access := postfix-expression @ symbol
+
+    nullable argument-list
 
     primary-expression := value
     primary-expression := ( expression )

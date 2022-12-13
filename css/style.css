@@ -1,6 +1,6 @@
 #code-editor {
     position: absolute;
-    width: 50vw; height: 70vh; top: 10vh; left: 20vw;
+    width: 100vw; height: calc(100vh - 150px); top:0; left:0;
 
     --status-color: gray;
 }
@@ -24,8 +24,8 @@ body{
 }
 
 div#highlighted{
-    background-color: rgb(44, 43, 40);
-    color: rgb(144, 143, 140);
+    background-color: var(--theme-shade-2);
+    color: var(--theme-shade-5);
     outline: 2px solid var(--status-color);
     outline-offset: -2px;
 }
@@ -41,6 +41,7 @@ textarea,div#highlighted{
     height: 100%;
     overflow: auto;
     position:absolute;
+    font-weight: 300;
 }
 
 textarea{
@@ -61,3 +62,33 @@ span.string-literal{ color: var(--theme-color-yellow); }
 span.type-name{ color: var(--theme-color-green); }
 span.operator{ color: var(--theme-color-red); }
 span.unknown{ color: var(--theme-shade-8); }
+
+#code-output{
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 100vw;
+    height: 150px;
+    overflow: auto;
+    padding: 5pt;
+    box-sizing: border-box;
+    border: 2px solid #5b595c;
+    background: #222222;
+}
+
+#console>span{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9pt;
+    display: block;
+    padding: 6px 0;
+    white-space: pre;
+    color: white;
+    line-height: 1.2;
+}
+
+#console ::selection{
+    background: #FFF2 !important;
+}
+
+#console>span:not(:first-child){
+    border-top: 1px solid #5b595c;
+}
