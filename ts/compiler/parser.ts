@@ -1,22 +1,20 @@
 class ParseRule {
     public readonly lhs: TokenType;
     public readonly rhs: SymbolString;
+    private readonly str : string;
 
     constructor(lhs: TokenType, rhs: SymbolString) {
         this.lhs = lhs;
         this.rhs = rhs;
+        this.str = `${this.lhs} := ${this.rhs}`;
     }
 
     public get length() {
         return this.rhs.length
     }
 
-    public get isEmpty() {
-        return this.length === 0
-    }
-
     public toString() {
-        return `${this.lhs} := ${this.rhs}`
+        return this.str;
     }
 }
 
