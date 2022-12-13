@@ -120,55 +120,63 @@ const lexer = Lexer.new`
     ignore multi-line-comment
 `
 
+// const parser = Parser.new`
+//     start declarations
+//
+//     nullable declarations
+//     declarations := declaration declarations
+//
+//     declaration := method-declaration
+//     declaration := variable-declaration
+//     declaration := ;
+//
+//     method-declaration := decl func symbol { statements }
+//     variable-declaration := type var symbol ;
+//
+//     type := symbol
+//
+//     nullable statements
+//     statements := statement statements
+//
+//     statement := print-statement
+//     print-statement := print expression ;
+//
+//     expression := prefix-expression
+//
+//     prefix-expression := postfix-expression
+//     prefix-expression := ++ prefix-expression
+//     prefix-expression := -- prefix-expression
+//
+//     postfix-expression := primary-expression
+//     postfix-expression := postfix-expression ++
+//     // postfix-expression := postfix-expression --
+//     // postfix-expression := function-call
+//     // postfix-expression := subscript-call
+//     // postfix-expression := member-access
+//     //
+//     // function-call := postfix-expression ( argument-list )
+//     // subscript-call := postfix-expression ( argument-list )
+//
+//     // member-access := postfix-expression . symbol
+//     // member-access := postfix-expression @ symbol
+//
+//     // nullable argument-list
+//
+//     primary-expression := value
+//     primary-expression := ( expression )
+//
+//     value := number-literal
+//     value := integer-literal
+//     value := string-literal
+//     value := char-literal
+// `;
+
 const parser = Parser.new`
     start declarations
 
     nullable declarations
-    declarations := declaration declarations
-
-    declaration := method-declaration
-    declaration := variable-declaration
+    declarations := declarations declaration
     declaration := ;
-
-    method-declaration := decl func symbol { statements }
-    variable-declaration := type var symbol ;
-
-    type := symbol
-
-    nullable statements
-    statements := statement statements
-
-    statement := print-statement
-    print-statement := print expression ;
-
-    expression := prefix-expression
-
-    prefix-expression := postfix-expression
-    prefix-expression := ++ prefix-expression
-    prefix-expression := -- prefix-expression
-
-    postfix-expression := primary-expression
-    postfix-expression := postfix-expression ++
-    postfix-expression := postfix-expression --
-    postfix-expression := function-call
-    postfix-expression := subscript-call
-    postfix-expression := member-access
-
-    function-call := postfix-expression ( argument-list )
-    subscript-call := postfix-expression ( argument-list )
-
-    member-access := postfix-expression . symbol
-    member-access := postfix-expression @ symbol
-
-    nullable argument-list
-
-    primary-expression := value
-    primary-expression := ( expression )
-
-    value := number-literal
-    value := integer-literal
-    value := string-literal
-    value := char-literal
 `;
 
 function compile(code){

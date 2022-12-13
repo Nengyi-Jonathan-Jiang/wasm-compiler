@@ -270,8 +270,9 @@ class ItemSet {
     public add(value: Item) {
         if (this.has(value)){
             const s1 = this.get(value), s2 = value;
-            if(s1.toString() == s2.toString()) return false;
+            if(s1.toString() === s2.toString()) return false;
             this.map.set(this.stringify(s1), Item.merge(s1, s2));
+            console.log(`    Merging items in itemset: ${s1}    and    ${s2}`);
             return true;
         }
         this.map.set(this.stringify(value), value);
@@ -380,6 +381,8 @@ class ParseTableBuilder {
 
         if (item.isFinished) return res;
 
+        console.log("Finding closure of " + item);
+
         let edge = new ItemSet(...res);
 
         let updated = true;
@@ -394,6 +397,8 @@ class ParseTableBuilder {
 
                 const rest = itm.rule.rhs.substr(itm.pos + 1);
 
+                if(rest.length == 0) continue;
+
                 for (const r of this.grammar.startsWith.get(itm.next)) {
 
                     for (const lookahead of itm.lookahead) {
@@ -401,6 +406,7 @@ class ParseTableBuilder {
 
                         const isNew = res.add(newItem);
                         if (isNew) {
+                            console.log("    added " + newItem + " by expanding " + rest + " -> " + r + " with lookahead " + lookahead);
                             updated = true;
                             newEdge.add(newItem);
                         }
