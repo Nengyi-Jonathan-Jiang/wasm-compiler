@@ -164,48 +164,62 @@ const parser = Parser.new`
     // boolean-expression := boolean-expression !& equality-expression
     // boolean-expression := boolean-expression !^ equality-expression
     // boolean-expression := boolean-expression !| equality-expression
-    //
-    // equality-expression := relational-expression
-    // equality-expression := relational-expression == relational-expression
-    // equality-expression := relational-expression != relational-expression
-    //
-    // relational-expression := shift-expression
-    // relational-expression := shift-expression > shift-expression
-    // relational-expression := shift-expression < shift-expression
-    // relational-expression := shift-expression >= shift-expression
-    // relational-expression := shift-expression <= shift-expression
 
-    expression := shift-expression
+    expression := equality-expression
+
+    equality-operator := ==
+    equality-operator := !=
+
+    equality-expression := relational-expression
+    equality-expression := relational-expression equality-operator relational-expression
+
+    relational-operator := >
+    relational-operator := <
+    relational-operator := >=
+    relational-operator := <=
+
+    relational-expression := shift-expression
+    relational-expression := shift-expression relational-operator shift-expression
+
+    shift-operator := <<
+    shift-operator := >>
 
     shift-expression := additive-expression
-    shift-expression := shift-expression << additive-expression
-    shift-expression := shift-expression >> additive-expression
+    shift-expression := shift-expression shift-operator additive-expression
+
+    additive-operator := +
+    additive-operator := -
 
     additive-expression := multiplicative-expression
-    additive-expression := additive-expression + multiplicative-expression
-    additive-expression := additive-expression - multiplicative-expression
+    additive-expression := additive-expression additive-operator multiplicative-expression
+
+    multiplicative-operator := *
+    multiplicative-operator := /
+    multiplicative-operator := %
 
     multiplicative-expression := prefix-expression
-    multiplicative-expression := multiplicative-expression * prefix-expression
-    multiplicative-expression := multiplicative-expression / prefix-expression
-    multiplicative-expression := multiplicative-expression % prefix-expression
+    multiplicative-expression := multiplicative-expression multiplicative-operator prefix-expression
+
+    prefix-operator := ++
+    prefix-operator := --
+    prefix-operator := >>>
+    prefix-operator := <<<
+    prefix-operator := !
+    prefix-operator := alloc
+    prefix-operator := dealloc
+    prefix-operator := #
+    prefix-operator := @
 
     prefix-expression := postfix-expression
-    prefix-expression := ++ prefix-expression
-    prefix-expression := -- prefix-expression
-    prefix-expression := >>> prefix-expression
-    prefix-expression := <<< prefix-expression
-    prefix-expression := ! prefix-expression
-    prefix-expression := alloc prefix-expression
-    prefix-expression := dealloc prefix-expression
-    prefix-expression := # prefix-expression
-    prefix-expression := @ prefix-expression
+    prefix-expression := prefix-operator prefix-expression
+
+    postfix-operator := ++
+    postfix-operator := --
+    postfix-operator := >>>
+    postfix-operator := <<<
 
     postfix-expression := primary-expression
-    postfix-expression := postfix-expression ++
-    postfix-expression := postfix-expression --
-    postfix-expression := postfix-expression >>>
-    postfix-expression := postfix-expression <<<
+    postfix-expression := postfix-expression postfix-operator
     postfix-expression := function-call
     postfix-expression := subscript-call
     postfix-expression := member-access
@@ -213,8 +227,10 @@ const parser = Parser.new`
     function-call := postfix-expression ( argument-list )
     subscript-call := postfix-expression [ argument-list ]
 
-    member-access := postfix-expression . symbol
-    member-access := postfix-expression @ symbol
+    member-access-operator := .
+    member-access-operator := @
+
+    member-access := postfix-expression member-access-operator symbol
 
     nullable argument-list
 

@@ -211,18 +211,24 @@ class Item {
     public readonly rule: ParseRule;
     public readonly pos: number;
     public readonly lookahead: SSet<TokenType>;
-    private readonly str: string;
+    private str: string;
 
     constructor(rule: ParseRule, pos: number, lookahead: SSet<TokenType>) {
         this.rule = rule;
         this.pos = pos;
         this.lookahead = lookahead;
 
-        this.str = `${rule.lhs} := ${
-            [...rule.rhs.symbols.slice(0, pos), "●", rule.rhs.symbols.slice(pos)].join(" ")
-        } ?= ${
-            [...lookahead].join(" / ")
-        }`;
+        this.generateRepr(rule, pos, lookahead);
+    }
+
+    private generateRepr(rule : ParseRule, pos : number, lookahead : SSet<TokenType>){
+        // this.str = `${rule.lhs} := ${
+        //     [...rule.rhs.symbols.slice(0, pos), "●", rule.rhs.symbols.slice(pos)].join(" ")
+        // } ?= ${
+        //     [...lookahead].join(" / ")
+        // }`;
+
+        this.str = `${rule.lhs} := ${rule.rhs} pos=${pos} ?= ${lookahead}`;
     }
 
     public get isFinished() {
@@ -312,7 +318,7 @@ class ItemSet {
         return this.map.size;
     }
 
-    public [Symbol.iterator] = (): Iterator<Item> => transformIterator(this.map.entries(), ([, value]) => value)
+    public [Symbol.iterator] = (): Iterator<Item> => this.map.values()
 }
 
 class ParseTableBuilder {

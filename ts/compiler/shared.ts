@@ -1,24 +1,9 @@
-function transformIterator<T, U>(iterator: Iterator<T>, func: (value: T) => U): Iterator<U> {
-    return {
-        next() {
-            const {value, done} = iterator.next();
-            return {value: done ? undefined : func(value), done};
-        }
-    }
-}
-
 class _map<T, U> {
-    private readonly map = new Map<string, U>;
+    readonly map = new Map<string, U>;
 
     public add(key: T, value: U) {
         let res = !this.has(key);
         this.map.set(key.toString(), value);
-        return res;
-    }
-
-    public del(key: T) {
-        let res = this.get(key);
-        this.map.delete(key.toString());
         return res;
     }
 
@@ -31,36 +16,37 @@ class _map<T, U> {
     }
 
     public get size() {
-        return this.map.size;
+        return this.map.size
     }
 
-    public [Symbol.iterator] = () : Iterator<[string, U]> => this.map.entries()
+    public [Symbol.iterator] = () => this.map.values()
 }
 
 class SSet<T> {
     private readonly map: _map<T, T> = new _map<T, T>();
 
     constructor(...values: T[]) {
-        this.addAll(...values);
+        values.forEach(val => this.map.map.set(val.toString(), val));
     }
 
-    public add(value: T){
-        return this.map.add(value, value)
+    public add(value: T) {
+        return this.map.add(value, value);
     }
 
     public addAll(...values: T[]) {
-        return values.map(value => this.add(value)).some(i => i);
-    }
-
-    public del(value: T) {
-        return this.map.del(value);
+        let res = false;
+        for (const val of values) {
+            res = res || !this.has(val);
+            this.map.map.set(val.toString(), val);
+        }
+        return res;
     }
 
     public has(value: T) {
         return this.map.has(value);
     }
 
-    public [Symbol.iterator] = () => transformIterator(this.map[Symbol.iterator](), ([, value]) => value);
+    public [Symbol.iterator] = () => this.map[Symbol.iterator]()
 
     public get size() {
         return this.map.size
@@ -87,10 +73,6 @@ class SMap<T, U> {
         return entries.map(([key, value]) => this.add(key, value)).some(i => i);
     }
 
-    public del(key: T) {
-        return this.map.del(key);
-    }
-
     public has(key: T) {
         return this.map.has(key);
     }
@@ -99,7 +81,7 @@ class SMap<T, U> {
         return this.map.get(key)?.[1];
     }
 
-    public [Symbol.iterator] = () => transformIterator(this.map[Symbol.iterator](), ([, entry]) => entry)
+    public [Symbol.iterator] = () => this.map[Symbol.iterator]()
 
     public get size() {
         return this.map.size
@@ -112,19 +94,13 @@ class SMap<T, U> {
 
 class TokenType {
     public static compressName = false;
-
-    private static id = 0;
-    private static instances : SMap<string, TokenType> = new SMap<string, TokenType>();
-
+    private static instances: SMap<string, TokenType> = new SMap<string, TokenType>();
     public readonly name: string;
     public readonly pattern: RegExp;
-    private readonly id = ++TokenType.id;
 
-    public static create(name: string, pattern: RegExp = null){
+    public static create(name: string, pattern: RegExp = null) {
         return this.instances.get(name) || new TokenType(name, pattern);
     }
-
-
     private constructor(name: string, pattern: RegExp) {
         this.name = name;
         this.pattern = pattern;
@@ -132,7 +108,7 @@ class TokenType {
         TokenType.instances.add(name, this);
     }
 
-    public toString = () => TokenType.compressName ? String.fromCharCode(this.id) : this.name;
+    public toString = () => this.name;
 
     public static readonly START = new TokenType("__START__", /^(?!x)x$/);
     public static readonly END = new TokenType("__END__", /^(?!x)x$/);
@@ -196,11 +172,13 @@ abstract class AST {
         this._value = value;
     }
 
-    public abstract get children() : AST[];
-    public abstract get value() : Token;
+    public abstract get children(): AST[];
+
+    public abstract get value(): Token;
 
     public [Symbol.iterator] = () => this.children[Symbol.iterator]()
-    public get isLeaf(){
+
+    public get isLeaf() {
         return this._value !== null;
     }
 
@@ -217,7 +195,7 @@ abstract class AST {
             throw new Error("Cannot access value of non-leaf node");
         }
 
-        public toString(){
+        public toString() {
             return `${
                 this.description
             } {${
