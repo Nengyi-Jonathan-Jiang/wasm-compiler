@@ -19,41 +19,62 @@ class _map<T, U> {
         return this.map.size
     }
 
-    public [Symbol.iterator] = () => this.map.values()
+    public [Symbol.iterator](){
+        return this.map.values();
+    }
 }
 
 class SSet<T> {
-    private readonly map: _map<T, T> = new _map<T, T>();
+    private readonly map : Map<string, T>;
+    private str : string;
+    private dirty: boolean;
 
     constructor(...values: T[]) {
-        values.forEach(val => this.map.map.set(val.toString(), val));
+        this.map = new Map<string, T>();
+        values.forEach(val => this.map.set(val.toString(), val));
+        this.dirty = true;
     }
 
     public add(value: T) {
-        return this.map.add(value, value);
+        const str = value.toString();
+        const res = !this.map.has(str);
+        this.map.set(str, value);
+        this.dirty ||= res;
+        return res;
     }
 
     public addAll(...values: T[]) {
         let res = false;
         for (const val of values) {
-            res = res || !this.has(val);
-            this.map.map.set(val.toString(), val);
+            const str = val.toString();
+            res ||= !this.map.has(str);
+            this.map.set(str, val);
         }
+        this.dirty ||= res;
         return res;
     }
 
     public has(value: T) {
-        return this.map.has(value);
+        return this.map.has(value.toString());
     }
 
-    public [Symbol.iterator] = () => this.map[Symbol.iterator]()
+    public [Symbol.iterator](){
+        return this.map.values()
+    }
+
+    public forEach(func : (value: T) => any){
+        for(let value of this.map.values()){
+            func(value);
+        }
+    }
 
     public get size() {
         return this.map.size
     }
 
     public toString() {
-        return `{${[...this].join(", ")}}`
+        if(this.dirty) this.str = `{${[...this].join("\0")}}`, this.dirty = false;
+        return this.str;
     }
 }
 

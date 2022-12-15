@@ -5,7 +5,7 @@ const lexer = Lexer.new`
 
     //literals
     char-literal := /'[^\\\\]|\\\\.'/
-    string-literal := /"([^\\\\]|\\\\.)*"/
+    string-literal := /"([^\\\\"]|\\\\.)*"/
     number-literal := /([1-9]\\d*|0)\\.\\d*|\\.\\d+/
     integer-literal := /[1-9]\\d*|0/
 

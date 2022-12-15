@@ -57,7 +57,7 @@ class Grammar {
             }
         }
 
-        [...this.allSymbols].filter(i => !this.nonTerminals.has(i)).forEach(i => this.terminals.add(i));
+        this.terminals.addAll(...[...this.allSymbols].filter(i => !this.nonTerminals.has(i)));
 
         for (const symbol of this.allSymbols) {
             this.startsWith.add(symbol, []);
@@ -166,8 +166,7 @@ class TableEntry {
         }
     }
 
-    public static Accept = class Accept extends TableEntry {
-    }
+    public static Accept = class Accept extends TableEntry { }
 }
 
 class ParsingTable {
@@ -222,12 +221,6 @@ class Item {
     }
 
     private generateRepr(rule : ParseRule, pos : number, lookahead : SSet<TokenType>){
-        // this.str = `${rule.lhs} := ${
-        //     [...rule.rhs.symbols.slice(0, pos), "●", rule.rhs.symbols.slice(pos)].join(" ")
-        // } ?= ${
-        //     [...lookahead].join(" / ")
-        // }`;
-
         this.str = `${rule.lhs} := ${rule.rhs} pos=${pos} ?= ${lookahead}`;
     }
 
@@ -277,10 +270,9 @@ class ItemSet {
 
     public add(value: Item) {
         if (this.has(value)){
-            const s1 = this.get(value), s2 = value;
-
-            const merged = Item.merge(s1, s2)
-            if(s1.lookahead.size == merged.lookahead.size) return false;
+            const prev = this.get(value);
+            const merged = Item.merge(prev, value)
+            if(prev.lookahead.size == merged.lookahead.size) return false;
 
             this._add(merged);
 
@@ -455,8 +447,6 @@ class ParseTableBuilder {
         for (const [itemSet, state] of this.configuratingSets) {
             this.generateActionSetEntries(state, itemSet);
             this.generateGotoSetEntries(state);
-
-            console.log(`Generated parsing table entries for ${++i} states (currently on state ${state})`);
         }
     }
 
