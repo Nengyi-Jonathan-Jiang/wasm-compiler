@@ -377,17 +377,21 @@ class Parser {
                 this.nodeStack = [];
                 this.finished = false;
             }
-            accept(token) {
+            accept(token, log = false) {
                 const state = this.stateStack[this.stateStack.length - 1];
                 const entry = _this.table.getAction(state, token.symbol);
                 if (entry === undefined)
-                    throw new Error("Parse error: Unknown error");
+                    throw new Error("Could not find entry for state " + state + " on symbol " + token);
                 if (entry instanceof TableEntry.Shift) {
                     this.stateStack.push(entry.nextState);
                     this.nodeStack.push(new AST.Leaf(token.symbol, token));
+                    if (log)
+                        console.log(`Shift on ${token}`);
                 }
                 else if (entry instanceof TableEntry.Accept) {
                     this.finished = true;
+                    if (log)
+                        console.log(`Accept on ${token}`);
                 }
                 else if (entry instanceof TableEntry.Reduce) {
                     const { rule: { lhs, length } } = entry;
@@ -400,6 +404,8 @@ class Parser {
                             children[j] = this.nodeStack.pop();
                         this.nodeStack.push(new AST.Node(lhs, ...children));
                     }
+                    if (log)
+                        console.log(`Reduce ${entry.rule} on ${token}`);
                     this.accept(token);
                 }
             }
@@ -413,9 +419,9 @@ class Parser {
             }
         };
     }
-    parse(tokens) {
+    parse(tokens, log = false) {
         const parse = new this.Parse();
-        tokens.forEach(token => parse.accept(token));
+        tokens.forEach(token => parse.accept(token, log));
         return parse.result;
     }
     static new([str]) {

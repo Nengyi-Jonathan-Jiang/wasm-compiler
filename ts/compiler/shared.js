@@ -23,14 +23,14 @@ class _map {
 }
 class SSet {
     constructor(...values) {
-        this.map = new Tree((a, b) => a.localeCompare(b));
-        values.forEach(val => this.map.insert(val.toString(), val));
+        this.map = new Map();
+        values.forEach(val => this.map.set(val.toString(), val));
         this.dirty = true;
     }
     add(value) {
         const str = value.toString();
-        const res = !this.map.contains(str);
-        this.map.insert(str, value);
+        const res = !this.map.has(str);
+        this.map.set(str, value);
         this.dirty || (this.dirty = res);
         return res;
     }
@@ -38,17 +38,17 @@ class SSet {
         let res = false;
         for (const val of values) {
             const str = val.toString();
-            res || (res = !this.map.contains(str));
-            this.map.insert(str, val);
+            res || (res = !this.map.has(str));
+            this.map.set(str, val);
         }
         this.dirty || (this.dirty = res);
         return res;
     }
     has(value) {
-        return this.map.insert(value.toString());
+        return this.map.has(value.toString());
     }
     [Symbol.iterator]() {
-        return this.map.values()[Symbol.iterator]();
+        return this.map.values();
     }
     forEach(func) {
         for (let value of this.map.values()) {
@@ -60,7 +60,7 @@ class SSet {
     }
     toString() {
         if (this.dirty) {
-            this.str = `${[...this].join("\0")}`;
+            this.str = `${[...this].sort().join("\0")}`;
             this.dirty = false;
         }
         return this.str;

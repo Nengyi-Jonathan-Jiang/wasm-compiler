@@ -216,7 +216,6 @@ class Item {
         this.rule = rule;
         this.pos = pos;
         this.lookahead = lookahead;
-
         this.generateRepr(rule, pos, lookahead);
     }
 
@@ -485,7 +484,7 @@ class ParseTableBuilder {
 
 class Parser {
     private readonly table: ParsingTable;
-    public readonly Parse: { new(): { accept(token: Token): void; readonly result: AST; readonly isFinished: boolean } };
+    public readonly Parse: { new(): { accept(token: Token, log?:boolean): void; readonly result: AST; readonly isFinished: boolean } };
 
     constructor(table: ParsingTable) {
         this.table = table;
@@ -496,17 +495,19 @@ class Parser {
             private readonly parsingTable: ParsingTable;
             private finished = false;
 
-            public accept(token: Token) {
+            public accept(token: Token, log:boolean=false) {
                 const state = this.stateStack[this.stateStack.length - 1];
                 const entry = _this.table.getAction(state, token.symbol);
 
-                if (entry === undefined) throw new Error("Parse error: Unknown error");
+                if (entry === undefined) throw new Error("Could not find entry for state " + state + " on symbol " + token);
 
                 if (entry instanceof TableEntry.Shift) {
                     this.stateStack.push(entry.nextState);
                     this.nodeStack.push(new AST.Leaf(token.symbol, token));
+                    if(log) console.log(`Shift on ${token}`);
                 } else if (entry instanceof TableEntry.Accept) {
                     this.finished = true;
+                    if(log) console.log(`Accept on ${token}`);
                 } else if (entry instanceof TableEntry.Reduce) {
                     const {rule: {lhs, length}} = entry;
 
@@ -518,6 +519,8 @@ class Parser {
                         for (let j = length; j-- > 0;) children[j] = this.nodeStack.pop();
                         this.nodeStack.push(new AST.Node(lhs, ...children));
                     }
+
+                    if(log) console.log(`Reduce ${entry.rule} on ${token}`);
 
                     this.accept(token);
                 }
@@ -534,9 +537,9 @@ class Parser {
         }
     }
 
-    public parse(tokens: Token[]) {
+    public parse(tokens: Token[], log:boolean=false) {
         const parse = new this.Parse();
-        tokens.forEach(token => parse.accept(token));
+        tokens.forEach(token => parse.accept(token, log));
         return parse.result;
     }
 

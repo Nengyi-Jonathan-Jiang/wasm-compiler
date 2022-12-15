@@ -124,7 +124,7 @@ const parser = Parser.new`
     start declarations
 
     nullable declarations
-    declarations := declaration declarations
+    declarations := declarations declaration
 
     declaration := method-declaration
     declaration := variable-declaration
@@ -140,32 +140,31 @@ const parser = Parser.new`
 
     statement := print-statement
     statement := expression ;
+    statement := ;
     print-statement := print expression ;
 
-    // expression := assignment-expression
-    //
-    // assignment-expression := boolean-expression
-    // assignment-expression := boolean-expression = assignment-expression
-    // assignment-expression := boolean-expression += assignment-expression
-    // assignment-expression := boolean-expression -= assignment-expression
-    // assignment-expression := boolean-expression *= assignment-expression
-    // assignment-expression := boolean-expression /= assignment-expression
-    // assignment-expression := boolean-expression %= assignment-expression
-    // assignment-expression := boolean-expression &= assignment-expression
-    // assignment-expression := boolean-expression |= assignment-expression
-    // assignment-expression := boolean-expression ^= assignment-expression
-    // assignment-expression := boolean-expression >>= assignment-expression
-    // assignment-expression := boolean-expression <<= assignment-expression
-    //
-    // boolean-expression := equality-expression
-    // boolean-expression := boolean-expression & equality-expression
-    // boolean-expression := boolean-expression ^ equality-expression
-    // boolean-expression := boolean-expression | equality-expression
-    // boolean-expression := boolean-expression !& equality-expression
-    // boolean-expression := boolean-expression !^ equality-expression
-    // boolean-expression := boolean-expression !| equality-expression
+    expression := assignment-expression
 
-    expression := equality-expression
+    assignment-expression := boolean-expression
+    assignment-expression := boolean-expression = assignment-expression
+    assignment-expression := boolean-expression += assignment-expression
+    assignment-expression := boolean-expression -= assignment-expression
+    assignment-expression := boolean-expression *= assignment-expression
+    assignment-expression := boolean-expression /= assignment-expression
+    assignment-expression := boolean-expression %= assignment-expression
+    assignment-expression := boolean-expression &= assignment-expression
+    assignment-expression := boolean-expression |= assignment-expression
+    assignment-expression := boolean-expression ^= assignment-expression
+    assignment-expression := boolean-expression >>= assignment-expression
+    assignment-expression := boolean-expression <<= assignment-expression
+
+    boolean-expression := equality-expression
+    boolean-expression := boolean-expression & equality-expression
+    boolean-expression := boolean-expression ^ equality-expression
+    boolean-expression := boolean-expression | equality-expression
+    boolean-expression := boolean-expression !& equality-expression
+    boolean-expression := boolean-expression !^ equality-expression
+    boolean-expression := boolean-expression !| equality-expression
 
     equality-operator := ==
     equality-operator := !=
@@ -235,6 +234,7 @@ const parser = Parser.new`
     nullable argument-list
 
     primary-expression := value
+    primary-expression := symbol
     primary-expression := ( expression )
 
     value := number-literal
