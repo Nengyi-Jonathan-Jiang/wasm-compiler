@@ -1,6 +1,6 @@
 /** @param {AST} ast*/
 function getTokens(ast){
-    return ast instanceof AST.Node ? [].concat(...ast.children.map(getTokens)) : [ast.value];
+    return ast instanceof AST.Node ? [].concat(...ast.children.map(getTokens)) : [ast.token];
 }
 
 /**
@@ -14,23 +14,54 @@ function highlight(ast, originalText, targetDiv){
     let m = basicMap(tokens);
 
     (/** @param {AST} node */function traverse(node){
-        switch(node.description){
-            default:
-                if(node instanceof AST.Node)
-                    node.children.forEach(traverse);
+        switch(node.description.name){
+            case "function-call":
+                m.set(node.children[0].token, "function");
+                break;
+            case "method-declaration":
+                m.set(node.children[2].token, "function");
+                break;
+            case "class-declaration":
+                m.set(node.children[2].token, "class");
+                break;
+            case "param-declaration":
+                m.set(node.children[2].token, "param");
+            case "variable-declaration":
+                m.set(node.children[0].token, "class");
+                break;
         }
+        if(node instanceof AST.Node)
+            node.children.forEach(traverse);
     })(ast);
 
-    let res = originalText;
+    hl(tokens, m, originalText, targetDiv);
+}
 
-    for(let tk of [...tokens].reverse()){
+/**
+ * @param {Token[]} tokens
+ * @param {string} originalText
+ * @param {HTMLDivElement} targetDiv
+ */
+function highlightBasic(tokens, originalText, targetDiv){
+    hl(tokens, basicMap(tokens), originalText, targetDiv);
+}
+
+/**
+ * @param {Token[]} tkns
+ * @param {Map<Token, string>} m
+ * @param {string} text
+ * @param {HTMLDivElement} target
+ */
+function hl(tkns, m, text, target){
+    let res = text;
+
+    for(let tk of [...tkns].reverse()){
         if(tk.symbol === TokenType.END) continue;
         let {start, end} = tk;
-        //console.log(start, end, tk);
         res = `${res.substring(0, start)}${"\0"}span class="${m.get(tk) || "unknown"}"${"\1"}${res.substring(start, end)}${"\0"}/span${"\1"}${res.substring(end)}`;
     }
 
-    targetDiv.innerHTML = res
+    target.innerHTML = res
         .replace(/</g,"&lt;")
         .replace(/>/g,"&gt;")
         .replaceAll("\0","<")
@@ -57,13 +88,17 @@ function basicMap(tokens){
                 m.set(token, "string-literal");
                 break;
 
+            case "symbol":
+                m.set(token, "symbol");
+                break;
+
             case "if": case "else":
             case "test": case "switch": case "case": case "default":
             case "do": case "while": case "for":
                 m.set(token, "control-keyword");
                 break;
             case "print":
-            case "decl": case "var": case "func": case "class":
+            case "decl": case "var": case "func": case "class": case "param":
             case "return":
             case "break": case "continue":
             case "goto":
@@ -71,8 +106,8 @@ function basicMap(tokens){
                 break;
             case ">>=": case "<<=": case "+=":
             case "*=":  case "-=":  case "/=":
-            case "%=":  case "==":  case "&&":
-            case "||":  case "^^":  case "++":
+            case "%=":  case "==":  case "!&":
+            case "!|":  case "!^":  case "++":
             case "--":  case "<=":  case ">=":
             case "!=":  case "<<":  case ">>":
             case "<-":  case "!":   case "=":
@@ -80,6 +115,7 @@ function basicMap(tokens){
             case "-":   case "*":   case "/":
             case "%":   case "?":   case ":":
             case "|":   case "&":   case "^":
+            case "#":   case "@":
                 m.set(token, "operator");
                 break;
             default:
@@ -87,27 +123,4 @@ function basicMap(tokens){
         }
     }
     return m;
-}
-
-/**
- * @param {Token[]} tokens
- * @param {string} originalText
- * @param {HTMLDivElement} targetDiv
- */
-function highlightBasic(tokens, originalText, targetDiv){
-    let m = basicMap(tokens);
-    let res = originalText;
-
-    for(let tk of [...tokens].reverse()){
-        if(tk.symbol === TokenType.END) continue;
-        let {start, end} = tk;
-        res = `${res.substring(0, start)}${"\0"}span class="${m.get(tk) || "unknown"}"${"\1"}${res.substring(start, end)}${"\0"}/span${"\1"}${res.substring(end)}`;
-    }
-
-    targetDiv.innerHTML = res
-        .replace(/</g,"&lt;")
-        .replace(/>/g,"&gt;")
-        .replaceAll("\0","<")
-        .replaceAll("\1",">")
-    ;
 }

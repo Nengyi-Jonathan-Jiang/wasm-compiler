@@ -27,6 +27,13 @@ class SSet {
         values.forEach(val => this.map.set(val.toString(), val));
         this.dirty = true;
     }
+    static from(...sets) {
+        const res = new SSet();
+        for (const set of sets)
+            for (const [key, value] of set.map)
+                res.map.set(key, value);
+        return res;
+    }
     add(value) {
         const str = value.toString();
         const res = !this.map.has(str);

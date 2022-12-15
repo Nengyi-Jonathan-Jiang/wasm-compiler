@@ -1,7 +1,7 @@
 class ParseRule {
     public readonly lhs: TokenType;
     public readonly rhs: SymbolString;
-    private readonly str : string;
+    private readonly str: string;
 
     constructor(lhs: TokenType, rhs: SymbolString) {
         this.lhs = lhs;
@@ -121,25 +121,18 @@ class Grammar {
         return this.terminals.has(symbol);
     }
 
-    public getFirstSet(string: SymbolString) {
-        if (string.length === 0) return new SSet(TokenType.EPSILON);
-        const res = new SSet(...this.firstSets.get(string.get(0)));
-        if (this.nullableSymbols.has(string.get(0))) res.addAll(...this.getFirstSet(string.substr(1)));
-        return res;
-    }
+    private readonly memoization: SMap<SymbolString, SSet<TokenType>> = new SMap<SymbolString, SSet<TokenType>>();
 
-    public getFollowSet(string: SymbolString) {
-        if (string.length === 0) return new SSet(TokenType.EPSILON);
-        const res = new SSet(...this.firstSets.get(string.get(-1)));
-        if (this.nullableSymbols.has(string.get(-1))) res.addAll(...this.getFirstSet(string.substr(0, -1)));
+    public getFirstSet(string: SymbolString): SSet<TokenType> {
+        if (string.length === 0)
+            return new SSet(TokenType.EPSILON);
+        if (this.memoization.has(string))
+            return this.memoization.get(string);
+        const res = this.nullableSymbols.has(string.get(0))
+            ? new SSet(...this.firstSets.get(string.get(0)), ...this.getFirstSet(string.substr(1)))
+            : new SSet(...this.firstSets.get(string.get(0)))
+        this.memoization.add(string, res);
         return res;
-    }
-
-    public isNullable(string: SymbolString) {
-        for (const symbol of string)
-            if (!this.nullableSymbols.has(symbol))
-                return false;
-        return true;
     }
 
     public toString() {
@@ -166,7 +159,8 @@ class TableEntry {
         }
     }
 
-    public static Accept = class Accept extends TableEntry { }
+    public static Accept = class Accept extends TableEntry {
+    }
 }
 
 class ParsingTable {
@@ -216,11 +210,6 @@ class Item {
         this.rule = rule;
         this.pos = pos;
         this.lookahead = lookahead;
-        this.generateRepr(rule, pos, lookahead);
-    }
-
-    private generateRepr(rule : ParseRule, pos : number, lookahead : SSet<TokenType>){
-        this.str = `${rule.lhs} := ${rule.rhs} pos=${pos} ?= ${lookahead}`;
     }
 
     public get isFinished() {
@@ -228,6 +217,7 @@ class Item {
     }
 
     toString() {
+        if (this.str === undefined) this.str = `${this.rule.lhs} := ${this.rule.rhs} pos=${this.pos} ?= ${this.lookahead}`;
         return this.str
     }
 
@@ -240,7 +230,13 @@ class Item {
     }
 
     public static merge(s1: Item, s2: Item) {
-        return new Item(s1.rule, s1.pos, new SSet<TokenType>(...s1.lookahead, ...s2.lookahead));
+        const lookahead = this.mergeLookahead(s1.lookahead, s2.lookahead);
+        return new Item(s1.rule, s1.pos, lookahead);
+    }
+
+    public static mergeLookahead(a: SSet<TokenType>, b: SSet<TokenType>){
+        //return new SSet<TokenType>(...a, ...b);
+        return SSet.from<TokenType>(a, b);
     }
 }
 
@@ -259,19 +255,19 @@ class ItemSet {
     }
 
     public toString() {
-        if(this.dirty) this.updateRepr();
+        if (this.dirty) this.updateRepr();
         return this.str;
     }
 
-    private stringify(item: Item){
+    private stringify(item: Item) {
         return item.rule + "@" + item.pos;
     }
 
     public add(value: Item) {
-        if (this.has(value)){
+        if (this.has(value)) {
             const prev = this.get(value);
             const merged = Item.merge(prev, value)
-            if(prev.lookahead.size == merged.lookahead.size) return false;
+            if (prev.lookahead.size == merged.lookahead.size) return false;
 
             this._add(merged);
 
@@ -281,7 +277,7 @@ class ItemSet {
         return this.dirty = true;
     }
 
-    private _add(value : Item){
+    private _add(value: Item) {
         this.map.set(this.stringify(value), value);
     }
 
@@ -484,7 +480,7 @@ class ParseTableBuilder {
 
 class Parser {
     private readonly table: ParsingTable;
-    public readonly Parse: { new(): { accept(token: Token, log?:boolean): void; readonly result: AST; readonly isFinished: boolean } };
+    public readonly Parse: { new(): { accept(token: Token, log?: boolean): void; readonly result: AST; readonly isFinished: boolean } };
 
     constructor(table: ParsingTable) {
         this.table = table;
@@ -495,7 +491,7 @@ class Parser {
             private readonly parsingTable: ParsingTable;
             private finished = false;
 
-            public accept(token: Token, log:boolean=false) {
+            public accept(token: Token, log: boolean = false) {
                 const state = this.stateStack[this.stateStack.length - 1];
                 const entry = _this.table.getAction(state, token.symbol);
 
@@ -504,10 +500,10 @@ class Parser {
                 if (entry instanceof TableEntry.Shift) {
                     this.stateStack.push(entry.nextState);
                     this.nodeStack.push(new AST.Leaf(token.symbol, token));
-                    if(log) console.log(`Shift on ${token}`);
+                    if (log) console.log(`Shift on ${token}`);
                 } else if (entry instanceof TableEntry.Accept) {
                     this.finished = true;
-                    if(log) console.log(`Accept on ${token}`);
+                    if (log) console.log(`Accept on ${token}`);
                 } else if (entry instanceof TableEntry.Reduce) {
                     const {rule: {lhs, length}} = entry;
 
@@ -520,7 +516,7 @@ class Parser {
                         this.nodeStack.push(new AST.Node(lhs, ...children));
                     }
 
-                    if(log) console.log(`Reduce ${entry.rule} on ${token}`);
+                    if (log) console.log(`Reduce ${entry.rule} on ${token}`);
 
                     this.accept(token);
                 }
@@ -537,7 +533,7 @@ class Parser {
         }
     }
 
-    public parse(tokens: Token[], log:boolean=false) {
+    public parse(tokens: Token[], log: boolean = false) {
         const parse = new this.Parse();
         tokens.forEach(token => parse.accept(token, log));
         return parse.result;

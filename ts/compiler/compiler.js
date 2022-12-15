@@ -29,6 +29,8 @@ const lexer = Lexer.new`
     basic break
     basic continue
 
+    basic return
+
     //access modifiers
     basic public
     basic private
@@ -124,14 +126,26 @@ const parser = Parser.new`
     start declarations
 
     nullable declarations
-    declarations := declarations declaration
+    declarations := declaration declarations
 
     declaration := method-declaration
+    declaration := class-declaration
     declaration := variable-declaration
     declaration := ;
 
-    method-declaration := decl func symbol { statements }
+    class-declaration := decl class symbol { declarations }
+
+    method-declaration := decl func symbol func-params block-statement
     variable-declaration := type var symbol ;
+
+    func-params := ( param-list )
+    func-params := empty-func-params
+    nullable empty-func-params
+
+    param-list := param-declaration
+    param-list := param-declaration , param-list
+
+    param-declaration := type param symbol
 
     type := symbol
 
@@ -139,9 +153,18 @@ const parser = Parser.new`
     statements := statement statements
 
     statement := print-statement
+    statement := variable-declaration
     statement := expression ;
+    statement := return-statement
+
     statement := ;
+    statement := block-statement
+    block-statement := { statements }
+
     print-statement := print expression ;
+
+    return-statement := return expression ;
+
 
     expression := assignment-expression
 
@@ -233,21 +256,19 @@ const parser = Parser.new`
 
     nullable argument-list
 
-    primary-expression := value
+    primary-expression := literal-value
     primary-expression := symbol
     primary-expression := ( expression )
 
-    value := number-literal
-    value := integer-literal
-    value := string-literal
-    value := char-literal
+    literal-value := number-literal
+    literal-value := integer-literal
+    literal-value := string-literal
+    literal-value := char-literal
 `;
 
 function compile(code){
     const tkns = lexer.lex(code);
     const ast = parser.parse(tkns);
-    // const wasm = new Emitter().convert({});
-    // return WebAssembly.instantiate(wasm);
     console.log(ast.toString());
     return ast;
 }

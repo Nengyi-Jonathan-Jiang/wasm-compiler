@@ -35,6 +35,14 @@ class SSet<T> {
         this.dirty = true;
     }
 
+    static from<T>(...sets: SSet<T>[]) : SSet<T> {
+        const res = new SSet<T>();
+        for(const set of sets)
+            for(const [key, value] of set.map)
+                res.map.set(key, value);
+        return res;
+    }
+
     public add(value: T) {
         const str = value.toString();
         const res = !this.map.has(str);
@@ -188,22 +196,22 @@ class SymbolString {
 abstract class AST {
     public readonly description: TokenType;
     protected readonly _children: AST[];
-    protected readonly _value: Token;
+    protected readonly _token: Token;
 
     protected constructor(description: TokenType, value: Token, ...children: AST[]) {
         this.description = description;
         this._children = children;
-        this._value = value;
+        this._token = value;
     }
 
     public abstract get children(): AST[];
 
-    public abstract get value(): Token;
+    public abstract get token(): Token;
 
     public [Symbol.iterator] = () => this.children[Symbol.iterator]()
 
     public get isLeaf() {
-        return this._value !== null;
+        return this._token !== null;
     }
 
     public static Node = class Node extends AST {
@@ -215,7 +223,7 @@ abstract class AST {
             return this._children;
         }
 
-        get value(): Token {
+        get token(): Token {
             throw new Error("Cannot access value of non-leaf node");
         }
 
@@ -239,10 +247,10 @@ abstract class AST {
             throw new Error("Cannot access children of leaf node");
         }
 
-        get value(): Token {
-            return this._value;
+        get token(): Token {
+            return this._token;
         }
 
-        public toString = () => this.value
+        public toString = () => this.token
     }
 }

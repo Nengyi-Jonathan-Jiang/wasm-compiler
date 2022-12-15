@@ -14,6 +14,7 @@ class ParseRule {
 }
 class Grammar {
     constructor(startSymbol, ...rules) {
+        this.memoization = new SMap();
         this.rules = rules;
         this.startRule = new ParseRule(TokenType.START, new SymbolString(startSymbol));
         this.rules.push(this.startRule);
@@ -89,24 +90,13 @@ class Grammar {
     getFirstSet(string) {
         if (string.length === 0)
             return new SSet(TokenType.EPSILON);
-        const res = new SSet(...this.firstSets.get(string.get(0)));
-        if (this.nullableSymbols.has(string.get(0)))
-            res.addAll(...this.getFirstSet(string.substr(1)));
+        if (this.memoization.has(string))
+            return this.memoization.get(string);
+        const res = this.nullableSymbols.has(string.get(0))
+            ? new SSet(...this.firstSets.get(string.get(0)), ...this.getFirstSet(string.substr(1)))
+            : new SSet(...this.firstSets.get(string.get(0)));
+        this.memoization.add(string, res);
         return res;
-    }
-    getFollowSet(string) {
-        if (string.length === 0)
-            return new SSet(TokenType.EPSILON);
-        const res = new SSet(...this.firstSets.get(string.get(-1)));
-        if (this.nullableSymbols.has(string.get(-1)))
-            res.addAll(...this.getFirstSet(string.substr(0, -1)));
-        return res;
-    }
-    isNullable(string) {
-        for (const symbol of string)
-            if (!this.nullableSymbols.has(symbol))
-                return false;
-        return true;
     }
     toString() {
         return this.rules.join("\n");
@@ -158,15 +148,13 @@ class Item {
         this.rule = rule;
         this.pos = pos;
         this.lookahead = lookahead;
-        this.generateRepr(rule, pos, lookahead);
-    }
-    generateRepr(rule, pos, lookahead) {
-        this.str = `${rule.lhs} := ${rule.rhs} pos=${pos} ?= ${lookahead}`;
     }
     get isFinished() {
         return this.pos >= this.rule.length;
     }
     toString() {
+        if (this.str === undefined)
+            this.str = `${this.rule.lhs} := ${this.rule.rhs} pos=${this.pos} ?= ${this.lookahead}`;
         return this.str;
     }
     get next() {
@@ -176,7 +164,11 @@ class Item {
         return new Item(this.rule, this.pos + 1, this.lookahead);
     }
     static merge(s1, s2) {
-        return new Item(s1.rule, s1.pos, new SSet(...s1.lookahead, ...s2.lookahead));
+        const lookahead = this.mergeLookahead(s1.lookahead, s2.lookahead);
+        return new Item(s1.rule, s1.pos, lookahead);
+    }
+    static mergeLookahead(a, b) {
+        return SSet.from(a, b);
     }
 }
 class ItemSet {
