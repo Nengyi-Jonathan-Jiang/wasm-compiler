@@ -73,7 +73,10 @@ class SSet<T> {
     }
 
     public toString() {
-        if(this.dirty) this.str = `{${[...this].join("\0")}}`, this.dirty = false;
+        if(this.dirty){
+            this.str = `${[...this].sort().join("\0")}`;
+            this.dirty = false;
+        }
         return this.str;
     }
 }

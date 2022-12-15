@@ -35,9 +35,12 @@ input.oninput(null);
 input.onkeydown = e => {
     if(e.key === "Enter" && e.ctrlKey){
         let tokens = lexer.lex(input.value);
-        let ast = parser.parse(tokens);
+        try {
+            let ast = parser.parse(tokens, true);
 
-        console.log(ast.toString());
+            console.log(ast.toString());
+        }
+        catch(e){console.error(e)}
 
         e.preventDefault();
     }
