@@ -1,7 +1,7 @@
 function flatten<T>(arr: T[][]) : T[] { return [].concat(...arr) }
 
 /**
- * @description converts an AST outputted by the parser into WAT
+ * @description converts an AST outputted by the parser into something idk
  */
 class Emitter{
     static get magicModuleHeader(){ return [0x00, 0x61, 0x73, 0x6d]}
@@ -117,4 +117,4 @@ enum ExportType  {
     table = 0x01,
     mem = 0x02,
     global = 0x03
-});
+}

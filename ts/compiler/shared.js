@@ -151,10 +151,10 @@ class AST {
         this[_c] = () => this.children[Symbol.iterator]();
         this.description = description;
         this._children = children;
-        this._value = value;
+        this._token = value;
     }
     get isLeaf() {
-        return this._value !== null;
+        return this._token !== null;
     }
 }
 _c = Symbol.iterator;
@@ -165,7 +165,7 @@ AST.Node = class Node extends AST {
     get children() {
         return this._children;
     }
-    get value() {
+    get token() {
         throw new Error("Cannot access value of non-leaf node");
     }
     toString() {
@@ -175,13 +175,13 @@ AST.Node = class Node extends AST {
 AST.Leaf = class Leaf extends AST {
     constructor(description, value) {
         super(description, value);
-        this.toString = () => this.value;
+        this.toString = () => this.token;
     }
     get children() {
         throw new Error("Cannot access children of leaf node");
     }
-    get value() {
-        return this._value;
+    get token() {
+        return this._token;
     }
 };
 //# sourceMappingURL=shared.js.map

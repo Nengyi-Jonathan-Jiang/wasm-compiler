@@ -1,6 +1,9 @@
-/** @param {AST} ast*/
+/**
+ * @param {AST} ast
+ * @returns {Token[]}
+ */
 function getTokens(ast){
-    return ast instanceof AST.Node ? [].concat(...ast.children.map(getTokens)) : [ast.token];
+    return ast instanceof AST.Node ? [].concat(...ast.children.map(t => getTokens(t))) : [ast.token];
 }
 
 /**
@@ -18,11 +21,12 @@ function highlight(ast, originalText, targetDiv){
             case "function-call":
                 m.set(node.children[0].token, "function");
                 break;
-            case "method-declaration":
-                m.set(node.children[2].token, "function");
+            case "void-func-prototype":
+                m.set(node.children[1].token, "function");
                 break;
-            case "class-declaration":
-                m.set(node.children[2].token, "class");
+            case "func-prototype":
+                m.set(node.children[0].token, "class");
+                m.set(node.children[2].token, "function");
                 break;
             case "param-declaration":
                 m.set(node.children[2].token, "param");
@@ -30,8 +34,8 @@ function highlight(ast, originalText, targetDiv){
                 m.set(node.children[0].token, "class");
                 break;
         }
-        if(node instanceof AST.Node)
-            node.children.forEach(traverse);
+
+        if(node instanceof AST.Node) node.children.forEach(traverse);
     })(ast);
 
     hl(tokens, m, originalText, targetDiv);
@@ -92,6 +96,7 @@ function basicMap(tokens){
                 m.set(token, "symbol");
                 break;
 
+            case "import": case "export":
             case "if": case "else":
             case "test": case "switch": case "case": case "default":
             case "do": case "while": case "for":

@@ -395,10 +395,10 @@ class Parser {
                         for (let j = length; j-- > 0;)
                             children[j] = this.nodeStack.pop();
                         this.nodeStack.push(new AST.Node(lhs, ...children));
+                        if (log)
+                            console.log(`Reduce ${lhs} := ${children.map(i => i.description).join(" ")} on ${token}`);
                     }
-                    if (log)
-                        console.log(`Reduce ${entry.rule} on ${token}`);
-                    this.accept(token);
+                    this.accept(token, log);
                 }
             }
             get isFinished() {

@@ -130,7 +130,7 @@ class TokenType {
     public readonly name: string;
     public readonly pattern: RegExp;
 
-    public static create(name: string, pattern: RegExp = null) {
+    public static get(name: string, pattern: RegExp = null) {
         return this.instances.get(name) || new TokenType(name, pattern);
     }
     private constructor(name: string, pattern: RegExp) {

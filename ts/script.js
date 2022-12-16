@@ -11,7 +11,7 @@ input.onscroll = _ => {
 
 input.value=`
 decl func main {
-	print "Hello world";
+	return 42;
 }
 `.trim().replaceAll("\t","    ");
 

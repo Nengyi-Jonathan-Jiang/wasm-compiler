@@ -2,10 +2,12 @@ class ParseRule {
     public readonly lhs: TokenType;
     public readonly rhs: SymbolString;
     private readonly str: string;
+    public readonly process : (node: AST) => AST;
 
-    constructor(lhs: TokenType, rhs: SymbolString) {
+    constructor(lhs: TokenType, rhs: SymbolString, process:(node:AST) => AST = (x)=>x) {
         this.lhs = lhs;
         this.rhs = rhs;
+        this.process = process;
         this.str = `${this.lhs} := ${this.rhs}`;
     }
 
@@ -505,7 +507,7 @@ class Parser {
                     this.finished = true;
                     if (log) console.log(`Accept on ${token}`);
                 } else if (entry instanceof TableEntry.Reduce) {
-                    const {rule: {lhs, length}} = entry;
+                    const {rule, rule: {lhs, length}} = entry;
 
                     for (let j = 0; j < length; j++) this.stateStack.pop();
                     this.stateStack.push(table.getGoto(this.stateStack[this.stateStack.length - 1], lhs));
@@ -513,12 +515,12 @@ class Parser {
                     if (length != 1) {
                         const children: AST[] = new Array(length);
                         for (let j = length; j-- > 0;) children[j] = this.nodeStack.pop();
-                        this.nodeStack.push(new AST.Node(lhs, ...children));
+                        this.nodeStack.push(rule.process(new AST.Node(lhs, ...children)));
+
+                        if (log) console.log(`Reduce ${lhs} := ${children.map(i => i.description).join(" ")} on ${token}`);
                     }
 
-                    if (log) console.log(`Reduce ${entry.rule} on ${token}`);
-
-                    this.accept(token);
+                    this.accept(token, log);
                 }
             }
 
@@ -547,17 +549,24 @@ class Parser {
             const regex1 = /^(\S+) := (\S+( \S+)*)/;
             const regex2 = /^start (\S+)$/;
             const regex3 = /^nullable (\S+)$/;
+            const regex4 = /^flatten (\d+) (\d+) rule (\S+)$/;
             if (i.match(regex1) !== null) {
                 const [, _lhs, _rhs] = i.match(regex1);
-                const lhs = TokenType.create(_lhs), rhs = _rhs.split(" ").map(j => TokenType.create(j));
+                const lhs = TokenType.get(_lhs), rhs = _rhs.split(" ").map(j => TokenType.get(j));
                 rules.push(new ParseRule(lhs, new SymbolString(...rhs)))
             } else if (i.match(regex2) !== null) {
                 const [, lhs] = i.match(regex2);
-                startSymbol = TokenType.create(lhs);
+                startSymbol = TokenType.get(lhs);
             } else if (i.match(regex3) !== null) {
                 const [, _lhs] = i.match(regex3);
-                const lhs = TokenType.create(_lhs);
+                const lhs = TokenType.get(_lhs);
                 rules.push(new ParseRule(lhs, new SymbolString()));
+            } else if (i.match(regex4) !== null) {
+                const [, i1, i2, _lhs] = i.match(regex4);
+                const lhs = TokenType.get(_lhs);
+                rules.push(new ParseRule(lhs, new SymbolString(), (n:AST)=>{
+                    return new AST.Node(lhs, n.children[+i1], ...n.children[+i2].children);
+                }));
             } else throw new Error("Error in Parser specification");
         })
 

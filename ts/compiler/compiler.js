@@ -11,21 +11,20 @@ const lexer = Lexer.new`
 
     //declaration keywords
     basic decl
+    basic func
     basic var
     basic param
-    basic func
-    basic operator
-    basic class
     basic const
-    basic module
     basic import
+    basic export
+
+    basic usemem
 
     //control keywords
     basic while
     basic for
     basic if
     basic else
-    basic test
     basic break
     basic continue
 
@@ -41,12 +40,6 @@ const lexer = Lexer.new`
     basic ptr
     basic ref
     basic alloc
-
-    //misc keywords
-    basic print
-    basic setpixel
-    basic new
-    basic this
 
     //comparison operators
     basic ==
@@ -70,14 +63,8 @@ const lexer = Lexer.new`
     basic ^=
     basic >>=
     basic <<=
-    basic <<<
-    basic >>>
-
 
     //boolean and bitwise operators
-    basic !&
-    basic !|
-    basic !^
     basic !
     basic &
     basic |
@@ -93,19 +80,18 @@ const lexer = Lexer.new`
     basic %
 
     //memory operators
-        // value = ptr@field, value = @ptr
-        basic @
-        // ptr = #value
-        basic #
+    basic @
+    basic #
 
     //grouping symbols
     basic (
     basic )
-    basic [
-    basic ]
     basic {
     basic }
 
+    //types
+    basic int
+    basic float
 
     //punctuation
     basic .
@@ -129,25 +115,30 @@ const parser = Parser.new`
     declarations := declaration declarations
 
     declaration := method-declaration
-    declaration := class-declaration
     declaration := variable-declaration
+    declaration := import-declaration
     declaration := ;
 
-    class-declaration := decl class symbol { declarations }
+    import-declaration := import func-prototype ;
 
-    method-declaration := decl func symbol func-params block-statement
+    method-declaration := decl optional-export func-prototype block-statement
+    nullable optional-export
+    optional-export := export
     variable-declaration := type var symbol ;
+
+    func-prototype := type func symbol func-params
+    func-prototype := void-func-prototype
+    void-func-prototype := func symbol func-params
 
     func-params := ( param-list )
     func-params := empty-func-params
     nullable empty-func-params
-
     param-list := param-declaration
     param-list := param-declaration , param-list
-
     param-declaration := type param symbol
 
-    type := symbol
+    type := int
+    type := float
 
     nullable statements
     statements := statement statements
@@ -164,7 +155,6 @@ const parser = Parser.new`
     print-statement := print expression ;
 
     return-statement := return expression ;
-
 
     expression := assignment-expression
 
@@ -243,18 +233,19 @@ const parser = Parser.new`
     postfix-expression := primary-expression
     postfix-expression := postfix-expression postfix-operator
     postfix-expression := function-call
-    postfix-expression := subscript-call
     postfix-expression := member-access
 
     function-call := postfix-expression ( argument-list )
-    subscript-call := postfix-expression [ argument-list ]
 
     member-access-operator := .
     member-access-operator := @
 
     member-access := postfix-expression member-access-operator symbol
 
-    nullable argument-list
+    nullable empty-argument-list
+    argument-list := empty-argument-list
+    argument-list := expression
+    argument-list := expression, argument-list
 
     primary-expression := literal-value
     primary-expression := symbol
